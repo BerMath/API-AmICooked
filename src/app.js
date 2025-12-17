@@ -1,15 +1,15 @@
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // Middleware pour lire le JSON
 app.use(express.json());
 
 // Import des routes
-const usersRouter = require('./routes/routes_users');
+const usersRouter = require('../routes/routes_users');
 app.use('/users', usersRouter);
 
-const recipesRouter = require('./routes/routes_recipes');
+const recipesRouter = require('../routes/routes_recipes');
 app.use('/recipes', recipesRouter);
 
 // Route de base
