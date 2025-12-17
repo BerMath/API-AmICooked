@@ -1,0 +1,48 @@
+services:
+  # Service MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: amicooked_mysql
+    restart: always
+    environment: 
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: amicooked_db
+      MYSQL_USER:  amicooked_user
+      MYSQL_PASSWORD: amicooked_password
+    ports: 
+      - "3307:3306"
+    volumes:  
+      - mysql_data:/var/lib/mysql
+      - ./config/schema.sql:/docker-entrypoint-initdb. d/schema.sql
+    networks:
+      - amicooked_network
+    healthcheck: 
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout:  20s
+      retries:  10
+
+  # Service Node. js Express
+  api:
+    build: .
+    container_name: amicooked_api
+    restart: always
+    environment: 
+      DB_HOST: mysql
+      DB_USER: amicooked_user
+      DB_PASSWORD: amicooked_password
+      DB_NAME: amicooked_db
+      PORT: 3000
+    ports:
+      - "3001:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - amicooked_network
+
+volumes:
+  mysql_data:  
+
+networks:
+  amicooked_network:
+    driver: bridge
