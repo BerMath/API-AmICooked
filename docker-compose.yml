@@ -1,14 +1,16 @@
 services:
-  # Service MySQL
+  # MySQL Service
   mysql:
+    env_file:
+      - .env
     image: mysql:8.0
     container_name: amicooked_mysql
     restart: always
     environment: 
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: amicooked_db
-      MYSQL_USER:  amicooked_user
-      MYSQL_PASSWORD: amicooked_password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER:  ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports: 
       - "3307:3306"
     volumes:  
@@ -21,17 +23,19 @@ services:
       timeout:  20s
       retries:  10
 
-  # Service Node. js Express
+  # Node. js Express Service
   api:
+    env_file:
+      - .env
     build: .
     container_name: amicooked_api
     restart: always
     environment: 
-      DB_HOST: mysql
-      DB_USER: amicooked_user
-      DB_PASSWORD: amicooked_password
-      DB_NAME: amicooked_db
-      PORT: 3000
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      PORT: ${PORT}
     ports:
       - "3001:3000"
     depends_on:
