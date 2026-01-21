@@ -11,16 +11,19 @@ app.use(express.urlencoded({ extended: true }));
 const recipesRoutes = require('./routes/routes_recipes');
 const usersRoutes = require('./routes/routes_users');
 
-app.use('/recipes', recipesRoutes);
 app.use('/users', usersRoutes);
+app.use('/recipes', recipesRoutes);
 
 // Route de test
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'API AmICooked fonctionne! ',
+    message: 'Welcome to the Am I Cooked? API!',
     endpoints: {
       recipes: '/recipes',
-      users: '/users'
+      users: '/users',
+      ingredients: '/ingredients',
+      pictures: '/pictures',
+      filters: '/filters'
     }
   });
 });
@@ -32,10 +35,10 @@ const startServer = async () => {
   try {
     await testConnection();
     app.listen(PORT, () => {
-      console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+      console.log(`Server started on port ${PORT}`);
     });
   } catch (error) {
-    console.error('Impossible de démarrer le serveur:', error);
+    console.error('Unable to start the server:', error);
     process.exit(1);
   }
 };
