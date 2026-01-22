@@ -74,7 +74,7 @@ const createRecipe = async (req, res) => {
       difficulty || null,
       XP_winnable || null,
       id_picture || null,
-      id_user || null,
+      id_user,
       created_at || null,
       updated_at || null
     ]);
