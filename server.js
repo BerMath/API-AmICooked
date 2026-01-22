@@ -4,15 +4,17 @@ require('dotenv').config();
 const { testConnection } = require('./config/database');
 
 // Middleware
-app. use(express.json());
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
 const recipesRoutes = require('./routes/routes_recipes');
 const usersRoutes = require('./routes/routes_users');
+const filterRoutes = require('./routes/routes_filters');
 
 app.use('/users', usersRoutes);
 app.use('/recipes', recipesRoutes);
+app.use('/filters', filterRoutes);
 
 // Route de test
 app.get('/', (req, res) => {
