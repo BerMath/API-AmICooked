@@ -79,9 +79,9 @@ CREATE TABLE `Filters`
 
 CREATE TABLE `RecipeFiltres`
 (
-    `id_recipes` INT NOT NULL,
-    `id_filters` INT NOT NULL,
-    PRIMARY KEY (`id_recipes`, `id_filters`)
+    `id_recipe` INT NOT NULL,
+    `id_filter` INT NOT NULL,
+    PRIMARY KEY (`id_recipe`, `id_filter`)
 );
 
 ALTER TABLE `Recipe`
@@ -108,7 +108,7 @@ ALTER TABLE `Notation`
     ADD FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `RecipeFiltres`
-    ADD FOREIGN KEY (`id_recipes`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE;
+    ADD FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `RecipeFiltres`
-    ADD FOREIGN KEY (`id_filters`) REFERENCES `Filters` (`id`) ON DELETE CASCADE;
+    ADD FOREIGN KEY (`id_filter`) REFERENCES `Filters` (`id`) ON DELETE CASCADE;
