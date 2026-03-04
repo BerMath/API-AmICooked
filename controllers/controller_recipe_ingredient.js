@@ -1,8 +1,8 @@
-const { promisePool } = require('../config/database');
+const { promisePool: db } = require('../config/database');
 
 const getAllRecipeIngredients = async (req, res) => {
   try {
-    const [recipeIngredients] = await promisePool.query('SELECT * FROM RecipeIngredient');
+    const [recipeIngredients] = await db.query('SELECT * FROM RecipeIngredient');
     res.json(recipeIngredients);
   } catch (error) {
     console.error(error);

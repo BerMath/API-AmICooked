@@ -1,9 +1,9 @@
-const { promisePool } = require('../config/database');
+const { promisePool: db } = require('../config/database');
 
 // Récupérer tous les ingrédients
 const getAllIngredients = async (req, res) => {
   try {
-    const [ingredients] = await promisePool.query('SELECT * FROM Ingredient');
+    const [ingredients] = await db.query('SELECT * FROM Ingredient');
     res.json(ingredients);
   } catch (error) {
     console.error(error);

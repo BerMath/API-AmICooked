@@ -4,7 +4,7 @@ require('dotenv').config();
 const { testConnection } = require('./config/database');
 
 // Middleware
-app. use(express.json());
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
@@ -35,7 +35,6 @@ app.get('/', (req, res) => {
       favory: '/favory',
       recipe_ingredient: '/recipe_ingredient',
       notation: '/notation'
-    
     }
   });
 });
