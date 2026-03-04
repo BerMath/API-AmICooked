@@ -13,12 +13,14 @@ const usersRoutes = require('./routes/routes_users');
 const favoryRoutes = require('./routes/routes_favory');
 const ingredientRoutes = require('./routes/routes_ingredient');
 const recipeIngredientRoutes = require('./routes/routes_recipe_ingredient');
+const notationRoutes = require('./routes/routes_notation');
 
 app.use('/users', usersRoutes);
 app.use('/recipes', recipesRoutes);
 app.use('/favory', favoryRoutes);
 app.use('/ingredient', ingredientRoutes);
 app.use('/recipe_ingredient', recipeIngredientRoutes);
+app.use('/notation', notationRoutes);
 
 // Route de test
 app.get('/', (req, res) => {
@@ -31,7 +33,8 @@ app.get('/', (req, res) => {
       pictures: '/pictures',
       filters: '/filters',
       favory: '/favory',
-      recipe_indgredient: '/recipe_ingredient'
+      recipe_ingredient: '/recipe_ingredient',
+      notation: '/notation'
     
     }
   });
