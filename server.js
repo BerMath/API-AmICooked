@@ -10,9 +10,13 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 const recipesRoutes = require('./routes/routes_recipes');
 const usersRoutes = require('./routes/routes_users');
+const favoryRoutes = require('./routes/routes_favory');
+const ingredientRoutes = require('./routes/routes_ingredient');
 
 app.use('/users', usersRoutes);
 app.use('/recipes', recipesRoutes);
+app.use('/favory', favoryRoutes);
+app.use('/ingredient', ingredientRoutes);
 
 // Route de test
 app.get('/', (req, res) => {
@@ -21,9 +25,11 @@ app.get('/', (req, res) => {
     endpoints: {
       recipes: '/recipes',
       users: '/users',
-      ingredients: '/ingredients',
+      ingredient: '/ingredient',
       pictures: '/pictures',
-      filters: '/filters'
+      filters: '/filters',
+      favory: '/favory',
+    
     }
   });
 });
