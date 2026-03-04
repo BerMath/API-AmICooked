@@ -48,7 +48,7 @@ CREATE TABLE `Picture` (
 
 CREATE TABLE `Favory` (
   `id_user` INT NOT NULL,
-  `id_recette` INT NOT NULL,
+  `id_recipe` INT NOT NULL,
   `added_at` TIMESTAMP DEFAULT (now()),
   PRIMARY KEY (`id_user`, `id_recipe`)
 );
