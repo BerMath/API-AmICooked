@@ -17,19 +17,6 @@ router.get('/type/:type', getPicturesByType);
 router.post('/', addPicture);
 router.put('/:id', updatePicture);
 router.delete('/:id', deletePicture);
-
-// router.use('/upload/profile/:userId', (req, res) => {
-//   console.log('files:', req.files);
-//   console.log('body:', req.body);
-//   res.json({ files: req.files, body: req.body });
-// });
-
-// router.post('/upload/profile/:userId', multerUploadConf.any(), (req, res) => {
-//   console.log('files:', req.files);
-//   console.log('body:', req.body);
-//   res.json({ files: req.files, body: req.body });
-// });
-
 router.post('/upload/profile/:userId', multerUploadConf.single("avatar"), uploadProfilPicture);
 
 module.exports = router;
