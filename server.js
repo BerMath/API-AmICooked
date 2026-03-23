@@ -4,8 +4,8 @@ require('dotenv').config();
 const { testConnection } = require('./config/database');
 
 // Middleware
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 // Routes
 const recipesRoutes = require('./routes/routes_recipes');
@@ -23,6 +23,7 @@ app.use('/ingredient', ingredientRoutes);
 app.use('/recipe_ingredient', recipeIngredientRoutes);
 app.use('/notation', notationRoutes);
 app.use('/pictures', pictureRoutes);
+app.use('/uploads', express.static('/uploads')); // Servir les images depuis le dossier uploads
 
 // Route de test
 app.get('/', (req, res) => {
@@ -42,7 +43,7 @@ app.get('/', (req, res) => {
 });
 
 // Démarrer le serveur seulement après connexion à MySQL
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000 ;
 
 const startServer = async () => {
   try {
