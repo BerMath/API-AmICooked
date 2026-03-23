@@ -31,14 +31,14 @@ const getUserById = async (req, res) => {
 // Créer un utilisateur
 const createUser = async (req, res) => {
   try {
-    const { id, username, email, XP, LVL, created_at, updated_at, password } = req.body;
+    const {username, email, XP, LVL, created_at, updated_at, password } = req.body;
     
     if (!username) {
       return res.status(400).json({ message: 'Le nom est requis' });
     }
     
-    const query = 'INSERT INTO Users (id, username, email, created_at, updated_at, password) VALUES (?, ?, ?, ?, ?, ?)';
-    const [result] = await db.query(query, [id,username, email, created_at || null, updated_at || null, password]);
+    const query = 'INSERT INTO Users (username, email, created_at, updated_at, password) VALUES (?, ?, ?, ?, ?)';
+    const [result] = await db.query(query, [username, email, created_at || null, updated_at || null, password]);
     
     const newUser = {
       id: result.insertId,
