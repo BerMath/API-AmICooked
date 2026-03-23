@@ -105,12 +105,47 @@ const deletePicture = async (req, res) => {
   }
 };
 
+const uploadProfilPicture = async (req, res) => {
+  console.log('uploadProfilPicture');
+
+  try {
+    const userId = parseInt(req.params.userId);
+    console.log('userId:', userId);
+    
+    console.log('file:', req.file);
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    
+    const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    console.log("Url : ", url);
+
+    const [result] = await db.query(
+      'INSERT INTO Picture (url, type, alt_text) VALUES (?, ?, ?)',
+      [url, 'profile', `Profile picture for user ${userId}`]
+    );
+
+    await db.query(
+      'UPDATE Users SET profile_picture_id = ? WHERE id = ?',
+      [result.insertId, userId]
+    );
+
+    res.status(201).json({ message: 'Profile picture uploaded successfully', id: result.insertId, url });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   getAllPictures,
   getPictureById,
   getPicturesByType,
   addPicture,
   updatePicture,
-  deletePicture
+  deletePicture,
+  uploadProfilPicture
 };
 
