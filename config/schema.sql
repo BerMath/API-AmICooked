@@ -5,6 +5,7 @@ CREATE TABLE `Users` (
   `email` VARCHAR(200) UNIQUE NOT NULL,
   `XP` INT DEFAULT 0,
   `LVL` INT DEFAULT 1,
+  `profile_picture_id` INT DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT (now()),
   `updated_at` TIMESTAMP
 );
@@ -63,7 +64,7 @@ CREATE TABLE `Notation` (
   PRIMARY KEY (`id_user`, `id_recipe`)
 );
 
-CREATE TABLE `RecetteFiltres` (
+CREATE TABLE `RecipeFiltres` (
   `id_recettes` INT NOT NULL,
   `id_filtres` INT NOT NULL
 );
@@ -88,6 +89,8 @@ ALTER TABLE `Favory` ADD FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON
 ALTER TABLE `Notation` ADD FOREIGN KEY (`id_user`) REFERENCES `Users` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `Notation` ADD FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE;
-ALTER TABLE `Recipe` ADD FOREIGN KEY (`id`) REFERENCES `RecipeFiltres` (`id_recipes`);
+-- ALTER TABLE `Recipe` ADD FOREIGN KEY (`id`) REFERENCES `RecipeFiltres` (`id_recipes`);
 
-ALTER TABLE `Filters` ADD FOREIGN KEY (`id`) REFERENCES `RecipeFiltres` (`id_filters`);
+-- ALTER TABLE `Filters` ADD FOREIGN KEY (`id`) REFERENCES `RecipeFiltres` (`id_filters`);
+
+ALTER TABLE `Users` ADD FOREIGN KEY (`profile_picture_id`) REFERENCES Picture(id);
