@@ -31,6 +31,10 @@ const createRecipeFilter = async (req, res) => {
         const query = 'INSERT INTO RecipeFiltres(id_recipe, id_filter) VALUES (?,?)';
         const [result] = await db.query(query, [id_recipe, id_filter]);
 
+        if (!result) {
+            return res.status(404).json({message: 'No filters found for this recipe'});
+        }
+
         const newRecipeFilter = {
             id_recipe,
             id_filter,
@@ -55,6 +59,8 @@ const deleteRecipeFilter = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({message: 'Recipe filter Not Found'});
         }
+
+        return res.status(204).send();
     } catch (error) {
         console.error(error);
         res.status(500).json({message: "Server Error", error: error.message});
