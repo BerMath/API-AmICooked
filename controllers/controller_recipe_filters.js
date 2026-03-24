@@ -22,18 +22,18 @@ const getRecipeFilterByRecipeId = async (req, res) => {
 
 const createRecipeFilter = async (req, res) => {
     try {
-        const id_filter = req.body;
+        const {id_filter} = req.body;
         const id_recipe = parseInt(req.params.id);
-        if (!id_recipe || !id_filter) {
-            return res.status(400).json({message: 'Recipe id not found'});
+        if (Number.isNaN(id_recipe) || !id_filter) {
+            return res.status(400).json({message: 'Recipe id or filter id missing'});
         }
 
-        const query = 'INSERT INTO RecipeFiltres(id_recipes, id_filters) VALUES (?,?)';
+        const query = 'INSERT INTO RecipeFiltres(id_recipe, id_filter) VALUES (?,?)';
         const [result] = await db.query(query, [id_recipe, id_filter]);
 
         const newRecipeFilter = {
-            id_recipe: id_recipe,
-            id_filter: id_filter,
+            id_recipe,
+            id_filter,
         };
 
         res.status(201).json(newRecipeFilter);
