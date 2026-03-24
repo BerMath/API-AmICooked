@@ -13,7 +13,6 @@ const {
     createRecipeFilter,
     deleteRecipeFilter
 } = require('../controllers/controller_recipe_filters');
-const {route} = require("express/lib/application");
 
 router.get('/', getRecipes);         // GET /recipes
 router.get('/:id', getRecipeById);   // GET /recipes/:id
