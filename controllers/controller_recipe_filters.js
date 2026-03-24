@@ -1,11 +1,18 @@
-const {promisedPool: db} = require('../config/database');
+const {promisePool: db} = require('../config/database');
 
 const getRecipeFilterByRecipeId = async (req, res) => {
     try {
         const recipeId = parseInt(req.params.id);
+        if (Number.isNaN(recipeId)) {
+            return res.status(400).json({message: 'Invalid recipe id'});
+        }
+
         const [recipeFilters] = await db.query(`SELECT *
                                                 FROM RecipeFiltres
-                                                WHERE recipeId = ?`, [recipeId]);
+                                                WHERE id_recipe = ?`, [recipeId]);
+        if (recipeFilters.length === 0) {
+            return res.status(404).json({message: 'No filters found for this recipe'});
+        }
         res.json(recipeFilters);
     } catch (error) {
         console.error(error);
