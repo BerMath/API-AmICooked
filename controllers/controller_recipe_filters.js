@@ -60,7 +60,7 @@ const deleteRecipeFilter = async (req, res) => {
             return res.status(404).json({message: 'Recipe filter Not Found'});
         }
 
-        return res.status(204).send();
+        return res.status(204).send({message: 'Recipe filter Deleted'});
     } catch (error) {
         console.error(error);
         res.status(500).json({message: "Server Error", error: error.message});
