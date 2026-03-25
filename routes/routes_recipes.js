@@ -1,20 +1,29 @@
- const express = require('express');
-  const router = express.Router();
-  const {
+const express = require('express');
+const router = express.Router();
+const {
     getRecipes,
     getRecipeById,
     createRecipe,
     timeRecipe,
     updateRecipe,
     deleteRecipe
-  } = require('../controllers/controller_recipes');
+} = require('../controllers/controller_recipes');
+const {
+    getRecipeFilterByRecipeId,
+    createRecipeFilter,
+    deleteRecipeFilter
+} = require('../controllers/controller_recipe_filters');
 
-  router.get('/', getRecipes);         // GET /recipes
-  router.get('/:id', getRecipeById);   // GET /recipes/:id
-  router.post('/', createRecipe);      // POST /recipes
-  router.post('/:id/time', timeRecipe); // POST /recipes/:id/time
-  router.put('/:id', updateRecipe);    // PUT /recipes/:id
-  router.delete('/:id', deleteRecipe); // DELETE /recipes/:id
+router.get('/', getRecipes);         // GET /recipes
+router.get('/:id', getRecipeById);   // GET /recipes/:id
+router.post('/', createRecipe);      // POST /recipes
+router.post('/:id/time', timeRecipe); // POST /recipes/:id/time
+router.put('/:id', updateRecipe);    // PUT /recipes/:id
+router.delete('/:id', deleteRecipe); // DELETE /recipes/:id
+
+router.get('/:id/filters', getRecipeFilterByRecipeId); // GET /recipes/:id/filters
+router.post('/:id/filters', createRecipeFilter); // POST /recipes/:id/filters
+router.delete('/:id_recipe/filters/:id_filter', deleteRecipeFilter); // DELETE /recipes/:id_recipe/filters/:id_filter
 
 
-  module.exports = router; 
+module.exports = router;

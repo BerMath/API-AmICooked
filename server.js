@@ -10,6 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 const recipesRoutes = require('./routes/routes_recipes');
 const usersRoutes = require('./routes/routes_users');
+const filterRoutes = require('./routes/routes_filters');
 const favoryRoutes = require('./routes/routes_favory');
 const ingredientRoutes = require('./routes/routes_ingredient');
 const recipeIngredientRoutes = require('./routes/routes_recipe_ingredient');
@@ -18,6 +19,7 @@ const pictureRoutes = require('./routes/routes_picture');
 
 app.use('/users', usersRoutes);
 app.use('/recipes', recipesRoutes);
+app.use('/filters', filterRoutes);
 app.use('/favory', favoryRoutes);
 app.use('/ingredient', ingredientRoutes);
 app.use('/recipe_ingredient', recipeIngredientRoutes);
