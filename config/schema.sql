@@ -2,7 +2,7 @@ CREATE TABLE `Users`
 (
     `id`         INT PRIMARY KEY AUTO_INCREMENT,
     `username`   VARCHAR(25) UNIQUE  NOT NULL,
-    `password`   VARCHAR(50)         NOT NULL,
+    `password`   VARCHAR(512)         NOT NULL,
     `email`      VARCHAR(200) UNIQUE NOT NULL,
     `XP`         INT       DEFAULT 0,
     `LVL`        INT       DEFAULT 1,
