@@ -31,22 +31,26 @@ const getUserById = async (req, res) => {
 
 const createUser = async (req, res) => {
     try {
-        const {id, username, email, XP, LVL, created_at, updated_at, password} = req.body;
+        const {id, username, email, password} = req.body;
 
         if (!username) {
             return res.status(400).json({message: 'Le nom est requis'});
         }
 
+        const date = new Date();
+        const actualTimeStamp = date.toISOString().split('T')[0] + ' '
+            + date.toTimeString().split(' ')[0];
+
         const hashedPassword = await bcrypt.hash(password, 10);
         const query = 'INSERT INTO Users (id, username, email, created_at, updated_at, password) VALUES (?, ?, ?, ?, ?, ?)';
-        const [result] = await db.query(query, [id, username, email, created_at || null, updated_at || null, hashedPassword]);
+        const [result] = await db.query(query, [id, username, email, actualTimeStamp, actualTimeStamp, hashedPassword]);
 
         const newUser = {
             id: result.insertId,
             username: username,
             email: email,
-            created_at: created_at,
-            updated_at: updated_at || null,
+            created_at: actualTimeStamp,
+            updated_at: actualTimeStamp,
             password: hashedPassword,
         };
 
