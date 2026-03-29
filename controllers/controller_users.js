@@ -8,7 +8,7 @@ const getUsers = async (req, res) => {
         res.json(users);
     } catch (error) {
         console.error(error);
-        res.status(500).json({message: 'Erreur serveur', error: error.message});
+        res.status(500).json({message: 'Server error', error: error.message});
     }
 };
 
@@ -19,13 +19,13 @@ const getUserById = async (req, res) => {
         const [users] = await db.query('SELECT * FROM Users WHERE id = ?', [id]);
 
         if (users.length === 0) {
-            return res.status(404).json({message: 'Utilisateur non trouvé'});
+            return res.status(404).json({message: 'User not found'});
         }
 
         res.json(users[0]);
     } catch (error) {
         console.error(error);
-        res.status(500).json({message: 'Erreur serveur', error: error.message});
+        res.status(500).json({message: 'Server error', error: error.message});
     }
 };
 
@@ -34,7 +34,7 @@ const createUser = async (req, res) => {
         const {id, username, email, password} = req.body;
 
         if (!username) {
-            return res.status(400).json({message: 'Le nom est requis'});
+            return res.status(400).json({message: 'Username is required'});
         }
 
         const date = new Date();
@@ -54,16 +54,16 @@ const createUser = async (req, res) => {
             password: hashedPassword,
         };
 
-        res.status(201).json(newUser);
+        res.status(201).json(newUser); // 201 = Created
     } catch (error) {
         console.error(error);
 
         // Handle duplicated email error
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({message: 'Cet email existe déjà'});
+            return res.status(409).json({message: 'This email or username already exists'});
         }
 
-        res.status(500).json({message: 'Erreur serveur', error: error.message});
+        res.status(500).json({message: 'Server error', error: error.message});
     }
 };
 
@@ -71,33 +71,87 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const {username, email, password} = req.body;
+        let {username, email, password, oldPassword} = req.body;
 
-        if (!username) {
-            return res.status(400).json({message: 'Le nom est requis'});
+        username = username ?? null
+        email = email ?? null;
+        password = password ?? null;
+
+        if (password !== undefined && password !== null) {
+            const [users] = await db.query('SELECT password FROM Users WHERE id = ?', [id]);
+            if (users.length === 0) {
+                return res.status(404).json({message: 'User not found'});
+            }
+
+            const isPasswordValid = await bcrypt.compare(oldPassword, users[0].password);
+            if (!isPasswordValid) {
+                return res.status(401).json({message: 'Invalid old password'});
+            }
+
+            password = await bcrypt.hash(password, 10);
         }
 
-        const query = 'UPDATE Users SET username = ?, email = ?, password = ? WHERE id = ?';
-        const [result] = await db.query(query, [username, email, password || null, id]);
+        const date = new Date();
+        const actualTimeStamp = date.toISOString().split('T')[0] + ' '
+            + date.toTimeString().split(' ')[0];
+
+        const query = 'UPDATE Users SET username = IFNULL(?, username), email = IFNULL(?, email), password = IFNULL(?, password), updated_at = ? WHERE id = ?';
+        const [result] = await db.query(query, [username, email, password, actualTimeStamp, id]);
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({message: 'Utilisateur non trouvé'});
+            return res.status(404).json({message: 'User not found'});
         }
 
         // Get the updated user
-        const [users] = await db.query('SELECT * FROM Users WHERE id = ?', [id]);
-        res.json(users[0]);
+        const [updatedUsers] = await db.query('SELECT * FROM Users WHERE id = ?', [id]);
+        res.json(updatedUsers[0]);
     } catch (error) {
         console.error(error);
 
         // Handle duplicated email error
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({message: 'Cet email existe déjà'});
+            return res.status(409).json({message: 'This email or username already exists'}); // 409 = Conflict
         }
 
-        res.status(500).json({message: 'Erreur serveur', error: error.message});
+        res.status(500).json({message: 'Server error', error: error.message});
     }
 };
+
+const updateUserXp = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        let {xp} = req.body;
+        let lvl = null;
+
+        if (xp === undefined) {
+            return res.status(400).json({message: 'XP is required'});
+        }
+
+        const [existingXpAndLevelAmount] = await db.query('SELECT XP, LVL FROM Users WHERE id = ?', [id]);
+
+        if (existingXpAndLevelAmount.length === 0) {
+            return res.status(404).json({message: 'User not found'});
+        }
+
+        const currentXP = existingXpAndLevelAmount[0].XP;
+        const currentLVL = existingXpAndLevelAmount[0].LVL;
+
+        if (currentXP + xp > 100) {
+            lvl = currentLVL + 1;
+            xp = currentXP + xp - 100;
+        } else {
+            xp = currentXP + xp;
+        }
+
+        const query = 'UPDATE Users SET XP = IFNULL(?, XP), LVL = IFNULL(?, LVL) WHERE id = ?';
+        const [result] = await db.query(query, [xp, lvl, id]);
+
+        res.status(200).json({message: `User updated successfully, actual lvl ${lvl !== null ? lvl : currentLVL}, actual xp ${xp}`});
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message: 'Server error', error: error.message});
+    }
+}
 
 // Delete a user by an id
 const deleteUser = async (req, res) => {
@@ -106,13 +160,13 @@ const deleteUser = async (req, res) => {
         const [result] = await db.query('DELETE FROM Users WHERE id = ? ', [id]);
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({message: 'Utilisateur non trouvé'});
+            return res.status(404).json({message: 'User not found'});
         }
 
         res.status(204).send(); // 204 = No Content
     } catch (error) {
         console.error(error);
-        res.status(500).json({message: 'Erreur serveur', error: error.message});
+        res.status(500).json({message: 'Server error', error: error.message});
     }
 };
 
@@ -121,5 +175,6 @@ module.exports = {
     getUserById,
     createUser,
     updateUser,
+    updateUserXp,
     deleteUser
 };
