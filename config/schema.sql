@@ -2,12 +2,27 @@ CREATE TABLE `Users`
 (
     `id`         INT PRIMARY KEY AUTO_INCREMENT,
     `username`   VARCHAR(25) UNIQUE  NOT NULL,
-    `password`   VARCHAR(512)         NOT NULL,
+    `password`   VARCHAR(512)        NOT NULL,
     `email`      VARCHAR(200) UNIQUE NOT NULL,
     `XP`         INT       DEFAULT 0,
     `LVL`        INT       DEFAULT 1,
     `created_at` TIMESTAMP DEFAULT (now()),
     `updated_at` TIMESTAMP
+);
+
+CREATE TABLE `UserSessions`
+(
+    `id`         INT PRIMARY KEY AUTO_INCREMENT,
+    `user_id`    INT      NOT NULL,
+    `token_hash` CHAR(64) NOT NULL,
+    `expires_at` DATETIME NOT NULL,
+    `revoked_at` DATETIME,
+    `user_agent` VARCHAR(255),
+    `ip_address` VARCHAR(45),
+    `created_at` TIMESTAMP DEFAULT (now()),
+    UNIQUE KEY `uq_user_sessions_token_hash` (`token_hash`),
+    KEY `idx_user_sessions_user_id` (`user_id`),
+    KEY `idx_user_sessions_expires_at` (`expires_at`)
 );
 
 CREATE TABLE `Recipe`
@@ -86,6 +101,9 @@ CREATE TABLE `RecipeFiltres`
 
 ALTER TABLE `Recipe`
     ADD FOREIGN KEY (`id_user`) REFERENCES `Users` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `UserSessions`
+    ADD FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `Recipe`
     ADD FOREIGN KEY (`id_picture`) REFERENCES `Picture` (`id`) ON DELETE SET NULL;
