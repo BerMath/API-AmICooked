@@ -59,7 +59,7 @@ const saveRefreshSession = async (userId, refreshToken, req) => {
     const ipAddress = req.ip || req.socket?.remoteAddress || null;
 
     await db.query(
-        'INSERT INTO user_sessions (user_id, token_hash, expires_at, user_agent, ip_address) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO UserSessions (user_id, token_hash, expires_at, user_agent, ip_address) VALUES (?, ?, ?, ?, ?)',
         [userId, tokenHash, getRefreshExpiryDate(), userAgent, ipAddress]
     );
 };
@@ -104,7 +104,6 @@ const loginUser = async (req, res) => {
         return res.status(200).json({
             accessToken,
             refreshToken,
-            tokenType: 'Bearer'
         });
     } catch (error) {
         console.error(error);
@@ -133,7 +132,7 @@ const refreshUserToken = async (req, res) => {
 
         const currentHash = hashToken(refreshToken);
         const [sessions] = await db.query(
-            'SELECT id FROM user_sessions WHERE user_id = ? AND token_hash = ? AND revoked_at IS NULL AND expires_at > NOW()',
+            'SELECT id FROM UserSessions WHERE user_id = ? AND token_hash = ? AND revoked_at IS NULL AND expires_at > NOW()',
             [payload.id, currentHash]
         );
 
@@ -147,7 +146,7 @@ const refreshUserToken = async (req, res) => {
         }
 
         // Rotate refresh token: revoke old session then create a new one.
-        await db.query('UPDATE user_sessions SET revoked_at = NOW() WHERE id = ?', [sessions[0].id]);
+        await db.query('UPDATE UserSessions SET revoked_at = NOW() WHERE id = ?', [sessions[0].id]);
 
         const user = users[0];
         const newAccessToken = signAccessToken(user);
@@ -159,7 +158,7 @@ const refreshUserToken = async (req, res) => {
         return res.status(200).json({
             accessToken: newAccessToken,
             refreshToken: newRefreshToken,
-            tokenType: 'Bearer'
+            tokenType: 'Bearer',
         });
     } catch (error) {
         console.error(error);
@@ -183,10 +182,10 @@ const logoutUser = async (req, res) => {
         }
 
         if (allDevices === true) {
-            await db.query('UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL', [payload.id]);
+            await db.query('UPDATE UserSessions SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL', [payload.id]);
         } else {
             await db.query(
-                'UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = ? AND token_hash = ? AND revoked_at IS NULL',
+                'UPDATE UserSessions SET revoked_at = NOW() WHERE user_id = ? AND token_hash = ? AND revoked_at IS NULL',
                 [payload.id, hashToken(refreshToken)]
             );
         }
