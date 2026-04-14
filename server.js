@@ -1,11 +1,15 @@
 const express = require('express');
 const app = express();
+const multer = require('multer');
 require('dotenv').config();
 const { testConnection } = require('./config/database');
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Multer configuration: store files in memory, accept single file with key "img_blob"
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Routes
 const recipesRoutes = require('./routes/routes_recipes');
@@ -17,16 +21,16 @@ const recipeIngredientRoutes = require('./routes/routes_recipe_ingredient');
 const notationRoutes = require('./routes/routes_notation');
 const pictureRoutes = require('./routes/routes_picture');
 
-app.use('/users', usersRoutes);
-app.use('/recipes', recipesRoutes);
+app.use('/users', upload.single('img_blob'), usersRoutes);
+app.use('/recipes', upload.single('img_blob'), recipesRoutes);
 app.use('/filters', filterRoutes);
 app.use('/favory', favoryRoutes);
 app.use('/ingredient', ingredientRoutes);
 app.use('/recipe_ingredient', recipeIngredientRoutes);
 app.use('/notation', notationRoutes);
-app.use('/pictures', pictureRoutes);
+app.use('/pictures', upload.single('img_blob'), pictureRoutes);
 
-// Route de test
+// Test route
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Welcome to the Am I Cooked? API!',
@@ -43,7 +47,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Démarrer le serveur seulement après connexion à MySQL
+// Start the server only when the connexion to the MySQL db is successful
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
