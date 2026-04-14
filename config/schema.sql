@@ -26,6 +26,14 @@ CREATE TABLE `UserSessions`
     FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE
 );
 
+CREATE TABLE `Picture`
+(
+    `id`          INT PRIMARY KEY AUTO_INCREMENT,
+    `img_blob`    LONGBLOB NOT NULL,
+    `alt_text`    VARCHAR(200),
+    `uploaded_at` TIMESTAMP DEFAULT (now())
+);
+
 CREATE TABLE `Recipe`
 (
     `id`               INT PRIMARY KEY AUTO_INCREMENT,
@@ -62,13 +70,25 @@ CREATE TABLE `RecipeIngredient`
     FOREIGN KEY (`id_ingredient`) REFERENCES `Ingredient` (`id`) ON DELETE CASCADE
 );
 
-CREATE TABLE `Picture`
+CREATE TABLE `ProfilePicture`
 (
     `id`          INT PRIMARY KEY AUTO_INCREMENT,
-    `url`         VARCHAR(500) NOT NULL,
-    `type`        VARCHAR(20) COMMENT 'recipe, step, profile',
-    `alt_text`    VARCHAR(200),
-    `uploaded_at` TIMESTAMP DEFAULT (now())
+    `id_user`     INT NOT NULL,
+    `id_picture`  INT NOT NULL,
+    `uploaded_at` TIMESTAMP DEFAULT (now()),
+    UNIQUE KEY `uq_profile_picture_user_id` (`id_user`),
+    FOREIGN KEY (`id_user`) REFERENCES `Users` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`id_picture`) REFERENCES `Picture` (`id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `RecipePicture`
+(
+    `id`          INT PRIMARY KEY AUTO_INCREMENT,
+    `id_recipe`   INT NOT NULL,
+    `id_picture`  INT NOT NULL,
+    `uploaded_at` TIMESTAMP DEFAULT (now()),
+    FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`id_picture`) REFERENCES `Picture` (`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `Favory`
