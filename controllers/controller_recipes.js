@@ -70,7 +70,7 @@ const createRecipe = async (req, res) => {
             cooking_time || null,
             preparation_time || null,
             difficulty || null,
-            XP_winnable || null,
+            XP_winnable == null ? 100 : XP_winnable,
             id_picture || null,
             id_user,
             created_at || null,
@@ -85,7 +85,7 @@ const createRecipe = async (req, res) => {
             cooking_time: cooking_time || null,
             preparation_time: preparation_time || null,
             difficulty: difficulty || null,
-            XP_winnable: XP_winnable || null,
+            XP_winnable: XP_winnable == null ? 100 : XP_winnable,
             id_picture: id_picture || null,
             id_user: id_user || null,
         };
