@@ -30,18 +30,19 @@ const getPictureById = async (req, res) => {
 // Add an image
 const addPicture = async (req, res) => {
     try {
-        const {blob, alt_text} = req.body;
+        const img_blob = req.file ? req.file.buffer : req.body?.img_blob;
+        const alt_text = req.body?.alt_text || null;
 
-        if (!blob) {
+        if (!img_blob) {
             return res.status(400).json({message: 'Blob is required'});
         }
 
         const [result] = await db.query(
-            'INSERT INTO Picture (blob, alt_text) VALUES (?, ?)',
-            [blob, alt_text || null]
+            'INSERT INTO Picture (img_blob, alt_text) VALUES (?, ?)',
+            [img_blob, alt_text || null]
         );
 
-        res.status(201).json({message: 'Picture added successfully', id: result.insertId, blob, alt_text});
+        res.status(201).json({message: 'Picture added successfully', id: result.insertId, alt_text});
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
@@ -52,15 +53,16 @@ const addPicture = async (req, res) => {
 const updatePicture = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const {blob, alt_text} = req.body;
+        const img_blob = req.file ? req.file.buffer : req.body?.img_blob;
+        const alt_text = req.body?.alt_text || null;
 
-        if (!blob) {
+        if (!img_blob) {
             return res.status(400).json({message: 'Blob is required'});
         }
 
         const [result] = await db.query(
-            'UPDATE Picture SET blob = ?, alt_text = ? WHERE id = ?',
-            [blob, alt_text || null, id]
+            'UPDATE Picture SET img_blob = ?, alt_text = ? WHERE id = ?',
+            [img_blob, alt_text || null, id]
         );
 
         if (result.affectedRows === 0) {
@@ -93,24 +95,32 @@ const deletePicture = async (req, res) => {
 const createProfilePicture = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const {blob} = req.body;
-        await fetch(`http://localhost:${process.env.PORT}/pictures`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({img_blob: blob, alt_text: `user ${id}'s profile picture`})
-        })
-            .then(response => response.json())
-            .then(data => {
-                const pictureId = data.id;
-                return db.query('INSERT INTO ProfilePicture (id_user, id_picture) VALUES (?, ?)', [id, pictureId]);
-            })
-            .then(() => res.status(201).json({message: 'Profile picture created successfully'}))
-            .catch(error => {
-                console.error(error);
-                res.status(500).json({message: 'Server error', error: error.message});
-            });
-    } catch
-        (error) {
+        
+        if (Number.isNaN(id)) {
+            return res.status(400).json({message: 'Invalid user id'});
+        }
+
+        // Read image from form-data (req.file.buffer) or JSON (req.body.img_blob)
+        const img_blob = req.file ? req.file.buffer : req.body?.img_blob;
+        
+        if (!img_blob) {
+            return res.status(400).json({message: 'Blob is required'});
+        }
+
+        // Create picture entry first
+        const [pictureResult] = await db.query(
+            'INSERT INTO Picture (img_blob, alt_text) VALUES (?, ?)',
+            [img_blob, `user ${id}'s profile picture`]
+        );
+
+        // Link to user
+        await db.query(
+            'INSERT INTO ProfilePicture (id_user, id_picture) VALUES (?, ?)',
+            [id, pictureResult.insertId]
+        );
+
+        res.status(201).json({message: 'Profile picture created successfully', id: pictureResult.insertId});
+    } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
     }
@@ -120,24 +130,32 @@ const createProfilePicture = async (req, res) => {
 const createRecipePicture = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const {blob} = req.body;
-        await fetch(`http://localhost:${process.env.PORT}/pictures`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({img_blob: blob, alt_text: `user ${id}'s profile picture`})
-        })
-            .then(response => response.json())
-            .then(data => {
-                const pictureId = data.id;
-                return db.query('INSERT INTO RecipePicture (id_user, id_picture) VALUES (?, ?)', [id, pictureId]);
-            })
-            .then(() => res.status(201).json({message: 'Profile picture created successfully'}))
-            .catch(error => {
-                console.error(error);
-                res.status(500).json({message: 'Server error', error: error.message});
-            });
-    } catch
-        (error) {
+        
+        if (Number.isNaN(id)) {
+            return res.status(400).json({message: 'Invalid recipe id'});
+        }
+
+        // Read image from form-data (req.file.buffer) or JSON (req.body.img_blob)
+        const img_blob = req.file ? req.file.buffer : req.body?.img_blob;
+        
+        if (!img_blob) {
+            return res.status(400).json({message: 'Blob is required'});
+        }
+
+        // Create picture entry first
+        const [pictureResult] = await db.query(
+            'INSERT INTO Picture (img_blob, alt_text) VALUES (?, ?)',
+            [img_blob, `recipe ${id}'s picture`]
+        );
+
+        // Link to recipe
+        await db.query(
+            'INSERT INTO RecipePicture (id_recipe, id_picture) VALUES (?, ?)',
+            [id, pictureResult.insertId]
+        );
+
+        res.status(201).json({message: 'Recipe picture created successfully', id: pictureResult.insertId});
+    } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
     }
@@ -149,7 +167,7 @@ const getProfilePicture = async (req, res) => {
         const id = parseInt(req.params.id);
         const [profilePicture] = await db.query('SELECT Picture.img_blob FROM Picture INNER JOIN ProfilePicture ON Picture.id = ProfilePicture.id_picture WHERE ProfilePicture.id_user = ?', [id]);
         if (profilePicture.length === 0) {
-            return res.status(404).json({message: 'ProfilePicture not found'});
+            return res.status(404).json({message: 'Profile picture not found'});
         }
         res.json({picture: profilePicture});
     } catch (error) {
