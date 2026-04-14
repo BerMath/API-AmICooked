@@ -22,7 +22,8 @@ CREATE TABLE `UserSessions`
     `created_at` TIMESTAMP DEFAULT (now()),
     UNIQUE KEY `uq_user_sessions_token_hash` (`token_hash`),
     KEY `idx_user_sessions_user_id` (`user_id`),
-    KEY `idx_user_sessions_expires_at` (`expires_at`)
+    KEY `idx_user_sessions_expires_at` (`expires_at`),
+    FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `Recipe`
@@ -37,7 +38,9 @@ CREATE TABLE `Recipe`
     `id_picture`       INT,
     `id_user`          INT          NOT NULL COMMENT 'creator of the recipe',
     `created_at`       TIMESTAMP DEFAULT (now()),
-    `updated_at`       TIMESTAMP
+    `updated_at`       TIMESTAMP,
+    FOREIGN KEY (`id_user`) REFERENCES `Users` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`id_picture`) REFERENCES `Picture` (`id`) ON DELETE SET NULL
 );
 
 CREATE TABLE `Ingredient`
@@ -54,7 +57,9 @@ CREATE TABLE `RecipeIngredient`
     `id_ingredient` INT NOT NULL,
     `quantity`      DECIMAL(10, 2),
     `unit`          VARCHAR(20) COMMENT 'g, ml, spoon, unit',
-    PRIMARY KEY (`id_recipe`, `id_ingredient`)
+    PRIMARY KEY (`id_recipe`, `id_ingredient`),
+    FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`id_ingredient`) REFERENCES `Ingredient` (`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `Picture`
@@ -71,7 +76,9 @@ CREATE TABLE `Favory`
     `id_user`   INT NOT NULL,
     `id_recipe` INT NOT NULL,
     `added_at`  TIMESTAMP DEFAULT (now()),
-    PRIMARY KEY (`id_user`, `id_recipe`)
+    PRIMARY KEY (`id_user`, `id_recipe`),
+    FOREIGN KEY (`id_user`) REFERENCES `Users` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `Notation`
@@ -82,7 +89,9 @@ CREATE TABLE `Notation`
     `comment`    TEXT,
     `created_at` TIMESTAMP DEFAULT (now()),
     `updated_at` TIMESTAMP,
-    PRIMARY KEY (`id_user`, `id_recipe`)
+    PRIMARY KEY (`id_user`, `id_recipe`),
+    FOREIGN KEY (`id_user`) REFERENCES `Users` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE
 );
 
 CREATE TABLE `Filters`
@@ -96,37 +105,8 @@ CREATE TABLE `RecipeFiltres`
 (
     `id_recipe` INT NOT NULL,
     `id_filter` INT NOT NULL,
-    PRIMARY KEY (`id_recipe`, `id_filter`)
+    PRIMARY KEY (`id_recipe`, `id_filter`),
+    FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`id_filter`) REFERENCES `Filters` (`id`) ON DELETE CASCADE
 );
 
-ALTER TABLE `Recipe`
-    ADD FOREIGN KEY (`id_user`) REFERENCES `Users` (`id`) ON DELETE CASCADE;
-
-ALTER TABLE `UserSessions`
-    ADD FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE;
-
-ALTER TABLE `Recipe`
-    ADD FOREIGN KEY (`id_picture`) REFERENCES `Picture` (`id`) ON DELETE SET NULL;
-
-ALTER TABLE `RecipeIngredient`
-    ADD FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE;
-ALTER TABLE `RecipeIngredient`
-    ADD FOREIGN KEY (`id_ingredient`) REFERENCES `Ingredient` (`id`) ON DELETE CASCADE;
-
-ALTER TABLE `Favory`
-    ADD FOREIGN KEY (`id_user`) REFERENCES `Users` (`id`) ON DELETE CASCADE;
-
-ALTER TABLE `Favory`
-    ADD FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE;
-
-ALTER TABLE `Notation`
-    ADD FOREIGN KEY (`id_user`) REFERENCES `Users` (`id`) ON DELETE CASCADE;
-
-ALTER TABLE `Notation`
-    ADD FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE;
-
-ALTER TABLE `RecipeFiltres`
-    ADD FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE;
-
-ALTER TABLE `RecipeFiltres`
-    ADD FOREIGN KEY (`id_filter`) REFERENCES `Filters` (`id`) ON DELETE CASCADE;
