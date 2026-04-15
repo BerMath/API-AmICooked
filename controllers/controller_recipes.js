@@ -47,8 +47,6 @@ const createRecipe = async (req, res) => {
             XP_winnable,
             id_picture,
             id_user,
-            created_at,
-            updated_at
         } = req.body;
 
         // Vérifications
@@ -59,9 +57,8 @@ const createRecipe = async (req, res) => {
         // Requête INSERT
         const query = `
             INSERT INTO Recipe
-            (name, description, cooking_time, preparation_time, difficulty, XP_winnable, id_picture, id_user,
-             created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (name, description, cooking_time, preparation_time, difficulty, XP_winnable, id_picture, id_user)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         const [result] = await db.query(query, [
@@ -73,8 +70,6 @@ const createRecipe = async (req, res) => {
             XP_winnable == null ? 100 : XP_winnable,
             id_picture || null,
             id_user,
-            created_at || null,
-            updated_at || null
         ]);
 
         // Construire l'objet renvoyé
