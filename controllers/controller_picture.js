@@ -92,32 +92,40 @@ const deletePicture = async (req, res) => {
 };
 
 // Create a profile picture for a user
-const createProfilePicture = async (req, res) => {
+const handleProfilePicture = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        
+
         if (Number.isNaN(id)) {
             return res.status(400).json({message: 'Invalid user id'});
         }
 
         // Read image from form-data (req.file.buffer) or JSON (req.body.img_blob)
         const img_blob = req.file ? req.file.buffer : req.body?.img_blob;
-        
+
         if (!img_blob) {
             return res.status(400).json({message: 'Blob is required'});
         }
 
-        // Create picture entry first
-        const [pictureResult] = await db.query(
-            'INSERT INTO Picture (img_blob, alt_text) VALUES (?, ?)',
-            [img_blob, `user ${id}'s profile picture`]
-        );
-
-        // Link to user
-        await db.query(
-            'INSERT INTO ProfilePicture (id_user, id_picture) VALUES (?, ?)',
-            [id, pictureResult.insertId]
-        );
+        const [isProfilePictureExist] = await db.query('SELECT * FROM ProfilePicture WHERE id_user = ?', [id]);
+        let pictureResult;
+        if (isProfilePictureExist.length > 0) {
+            const date = new Date();
+            const actualTimeStamp = date.toISOString().split('T')[0] + ' '
+                + date.toTimeString().split(' ')[0];
+            [pictureResult] = await db.query('UPDATE Picture INNER JOIN ProfilePicture ON Picture.id = ProfilePicture.id_picture SET Picture.img_blob = ?, Picture.uploaded_at = ? WHERE ProfilePicture.id_user = ?', [img_blob, actualTimeStamp, id]);
+        } else {
+            // Create picture entry first
+            [pictureResult] = await db.query(
+                'INSERT INTO Picture (img_blob, alt_text) VALUES (?, ?)',
+                [img_blob, `user ${id}'s profile picture`]
+            );
+            // Link to user
+            await db.query(
+                'INSERT INTO ProfilePicture (id_user, id_picture) VALUES (?, ?)',
+                [id, pictureResult.insertId]
+            );
+        }
 
         res.status(201).json({message: 'Profile picture created successfully', id: pictureResult.insertId});
     } catch (error) {
@@ -127,33 +135,41 @@ const createProfilePicture = async (req, res) => {
 }
 
 // Create a picture for a recipe
-const createRecipePicture = async (req, res) => {
+const handleRecipePicture = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        
+
         if (Number.isNaN(id)) {
             return res.status(400).json({message: 'Invalid recipe id'});
         }
 
         // Read image from form-data (req.file.buffer) or JSON (req.body.img_blob)
         const img_blob = req.file ? req.file.buffer : req.body?.img_blob;
-        
+
         if (!img_blob) {
             return res.status(400).json({message: 'Blob is required'});
         }
 
-        // Create picture entry first
-        const [pictureResult] = await db.query(
-            'INSERT INTO Picture (img_blob, alt_text) VALUES (?, ?)',
-            [img_blob, `recipe ${id}'s picture`]
-        );
 
-        // Link to recipe
-        await db.query(
-            'INSERT INTO RecipePicture (id_recipe, id_picture) VALUES (?, ?)',
-            [id, pictureResult.insertId]
-        );
-
+        const [isRecipePictureExist] = await db.query('SELECT * FROM RecipePicture WHERE id_recipe = ?', [id]);
+        let pictureResult;
+        if (isRecipePictureExist.length > 0) {
+            const date = new Date();
+            const actualTimeStamp = date.toISOString().split('T')[0] + ' '
+                + date.toTimeString().split(' ')[0];
+            [pictureResult] = await db.query('UPDATE Picture INNER JOIN RecipePicture ON Picture.id = RecipePicture.id_picture SET Picture.img_blob = ?, Picture.uploaded_at = ? WHERE RecipePicture.id_recipe = ?', [img_blob, actualTimeStamp, id]);
+        } else {
+            // Create picture entry first
+            [pictureResult] = await db.query(
+                'INSERT INTO Picture (img_blob, alt_text) VALUES (?, ?)',
+                [img_blob, `recipe ${id}'s picture`]
+            );
+            // Link to user
+            await db.query(
+                'INSERT INTO RecipePicture (id_recipe, id_picture) VALUES (?, ?)',
+                [id, pictureResult.insertId]
+            );
+        }
         res.status(201).json({message: 'Recipe picture created successfully', id: pictureResult.insertId});
     } catch (error) {
         console.error(error);
@@ -197,9 +213,9 @@ module.exports = {
     addPicture,
     updatePicture,
     deletePicture,
-    createRecipePicture,
+    handleRecipePicture,
     getProfilePicture,
     getRecipePicture,
-    createProfilePicture
+    handleProfilePicture
 };
 
