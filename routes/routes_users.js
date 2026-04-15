@@ -9,7 +9,7 @@ const {
     deleteUser
 } = require('../controllers/controller_users');
 const {loginUser, refreshUserToken, logoutUser} = require('../controllers/controller_auth');
-const {getProfilePicture, createProfilePicture} = require("../controllers/controller_picture");
+const {getProfilePicture, handleProfilePicture} = require("../controllers/controller_picture");
 
 router.post('/login', loginUser);               // POST /users/login
 router.post('/refresh', refreshUserToken);      // POST /users/refresh
@@ -23,6 +23,6 @@ router.patch('/:id/xp', updateUserXp);          // PATCH /users/:id/xp
 router.delete('/:id', deleteUser);              // DELETE /users/:id
 
 router.get('/:id/picture', getProfilePicture);      // GET /users/:id/picture
-router.post('/:id/picture', createProfilePicture);  // POST /users/:id/picture
+router.post('/:id/picture', handleProfilePicture);  // POST /users/:id/picture
 
 module.exports = router;
