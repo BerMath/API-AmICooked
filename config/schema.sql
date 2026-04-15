@@ -75,7 +75,6 @@ CREATE TABLE `ProfilePicture`
     `id`          INT PRIMARY KEY AUTO_INCREMENT,
     `id_user`     INT NOT NULL,
     `id_picture`  INT NOT NULL,
-    `uploaded_at` TIMESTAMP DEFAULT (now()),
     UNIQUE KEY `uq_profile_picture_user_id` (`id_user`),
     FOREIGN KEY (`id_user`) REFERENCES `Users` (`id`) ON DELETE CASCADE,
     FOREIGN KEY (`id_picture`) REFERENCES `Picture` (`id`) ON DELETE CASCADE
@@ -86,7 +85,6 @@ CREATE TABLE `RecipePicture`
     `id`          INT PRIMARY KEY AUTO_INCREMENT,
     `id_recipe`   INT NOT NULL,
     `id_picture`  INT NOT NULL,
-    `uploaded_at` TIMESTAMP DEFAULT (now()),
     FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE,
     FOREIGN KEY (`id_picture`) REFERENCES `Picture` (`id`) ON DELETE CASCADE
 );
