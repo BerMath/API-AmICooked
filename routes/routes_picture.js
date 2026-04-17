@@ -7,6 +7,9 @@ const {
   updatePicture,
   deletePicture
 } = require('../controllers/controller_picture');
+const {requireAuth} = require("../middleware/auth.middleware");
+
+router.use(requireAuth);
 
 router.get('/', getAllPictures);              // GET /pictures
 router.get('/:id', getPictureById);           // GET /pictures/:id
