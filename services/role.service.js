@@ -1,11 +1,19 @@
 const {promisePool: db} = require('../config/database');
 
-async function hasRequiredRole({ userId, roleMin }) {
+async function getUserRole(userId) {
     const [user] = await db.query('SELECT role FROM Users WHERE id = ?', [userId]);
-    return user[0].role >= roleMin;
+    if (user.length === 0) {
+        return null
+    }
+    return user[0].role;
+}
+
+async function hasRequiredRole({userId, roleMin}) {
+    return await getUserRole(userId) >= roleMin;
 }
 
 module.exports = {
-    hasRequiredRole
+    hasRequiredRole,
+    getUserRole
 };
 
