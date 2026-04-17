@@ -9,6 +9,9 @@ const {
   deleteIngredient,
   updateIngredient
 } = require('../controllers/controller_ingredient');
+const {requireAuth} = require("../middleware/auth.middleware");
+
+router.use(requireAuth);
 
 router.get('/', getAllIngredients);                        // GET /ingredients
 router.get('/:id', getIngredientById);                     // GET /ingredients/:id
