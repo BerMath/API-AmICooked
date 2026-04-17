@@ -6,6 +6,7 @@ CREATE TABLE `Users`
     `email`      VARCHAR(200) UNIQUE NOT NULL,
     `XP`         INT       DEFAULT 0,
     `LVL`        INT       DEFAULT 1,
+    `role`       INT       DEFAULT 0 COMMENT '0 = user, 1 = moderator, 2 = admin',
     `created_at` TIMESTAMP DEFAULT (now()),
     `updated_at` TIMESTAMP
 );
@@ -72,9 +73,9 @@ CREATE TABLE `RecipeIngredient`
 
 CREATE TABLE `ProfilePicture`
 (
-    `id`          INT PRIMARY KEY AUTO_INCREMENT,
-    `id_user`     INT NOT NULL,
-    `id_picture`  INT NOT NULL,
+    `id`         INT PRIMARY KEY AUTO_INCREMENT,
+    `id_user`    INT NOT NULL,
+    `id_picture` INT NOT NULL,
     UNIQUE KEY `uq_profile_picture_user_id` (`id_user`),
     FOREIGN KEY (`id_user`) REFERENCES `Users` (`id`) ON DELETE CASCADE,
     FOREIGN KEY (`id_picture`) REFERENCES `Picture` (`id`) ON DELETE CASCADE
@@ -82,9 +83,9 @@ CREATE TABLE `ProfilePicture`
 
 CREATE TABLE `RecipePicture`
 (
-    `id`          INT PRIMARY KEY AUTO_INCREMENT,
-    `id_recipe`   INT NOT NULL,
-    `id_picture`  INT NOT NULL,
+    `id`         INT PRIMARY KEY AUTO_INCREMENT,
+    `id_recipe`  INT NOT NULL,
+    `id_picture` INT NOT NULL,
     FOREIGN KEY (`id_recipe`) REFERENCES `Recipe` (`id`) ON DELETE CASCADE,
     FOREIGN KEY (`id_picture`) REFERENCES `Picture` (`id`) ON DELETE CASCADE
 );

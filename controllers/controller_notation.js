@@ -73,7 +73,7 @@ const addNotation = async (req, res) => {
 
 const deleteNotation = async (req, res) => {
   try {
-    const id_user = parseInt(req.params.id_user);
+    const id_user = parseInt(req.params.id);
     const id_recipe = parseInt(req.params.id_recipe);
 
     const [result] = await db.query('DELETE FROM Notation WHERE id_user = ? AND id_recipe = ?', [id_user, id_recipe]);

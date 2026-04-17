@@ -4,8 +4,8 @@ const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
 
 
-const ACCESS_TOKEN_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN || '15m';
-const REFRESH_TOKEN_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+const ACCESS_TOKEN_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN;
+const REFRESH_TOKEN_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN;
 
 const parseDurationToSeconds = (duration) => {
     if (typeof duration === 'number') {
@@ -30,7 +30,8 @@ const signAccessToken = (user) => {
         {
             id: user.id,
             email: user.email,
-            username: user.username
+            username: user.username,
+            role: user.role,
         },
         process.env.JWT_SECRET,
         {expiresIn: ACCESS_TOKEN_EXPIRES_IN}
@@ -41,9 +42,10 @@ const signRefreshToken = (user) => {
     return jwt.sign(
         {
             id: user.id,
+            role: user.role,
             type: 'refresh'
         },
-        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        process.env.JWT_REFRESH_SECRET,
         {expiresIn: REFRESH_TOKEN_EXPIRES_IN}
     );
 };
@@ -85,14 +87,14 @@ const loginUser = async (req, res) => {
         const [rows] = await db.query(query, [email]);
 
         if (!rows || rows.length === 0) {
-            return res.status(404).json({message: 'User Not Found'});
+            return res.status(404).json({message: 'Wrong email or password'});
         }
 
         const user = rows[0];
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(401).json({message: 'Login failed'});
+            return res.status(401).json({message: 'Wrong email or password'});
         }
 
         const accessToken = signAccessToken(user);
@@ -121,7 +123,7 @@ const refreshUserToken = async (req, res) => {
 
         let payload;
         try {
-            payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+            payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
         } catch (error) {
             return res.status(401).json({message: 'Invalid refresh token'});
         }

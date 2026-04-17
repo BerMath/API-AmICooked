@@ -6,6 +6,9 @@ const {
   addFavorite,
   deleteFavorite
 } = require('../controllers/controller_favory');
+const {requireAuth} = require("../middleware/auth.middleware");
+
+router.use(requireAuth);
 
 router.get('/', getAllFavorites);                        // GET /favorites
 router.get('/user/:id_user', getFavoritesByUserId);      // GET /favorites/user/:id_user
