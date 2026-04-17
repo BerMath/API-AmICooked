@@ -62,4 +62,18 @@ function requireRole(roleMin) {
     };
 }
 
-module.exports = {requireAuth, requireRoleOrSameUser, requireRole};
+function sameUser() {
+    return async (req, res, next) => {
+        try {
+            if (!(parseInt(req.params.id) === req.user?.id)) {
+                return res.status(403).json({error: 'Forbidden'});
+            }
+            next();
+        } catch (error) {
+            console.error('Role verification failed:', error.message);
+            return res.status(502).json({error: 'Forbidden'});
+        }
+    }
+}
+
+module.exports = {requireAuth, requireRoleOrSameUser, requireRole, sameUser};
