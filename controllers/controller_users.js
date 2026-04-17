@@ -1,5 +1,6 @@
 const {promisePool: db} = require('../config/database');
 const bcrypt = require("bcrypt");
+const {getUserRole} = require("../services/role.service");
 
 // Get all users
 const getUsers = async (req, res) => {
@@ -170,11 +171,63 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const promoteUser = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        let userRole = await getUserRole(id);
+
+        if (userRole > 1) {
+            return res.status(400).json({message: 'User is already an admin'});
+        }
+
+        [result] = await db.query('UPDATE Users SET role = ? WHERE id = ?', [userRole+1,id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({message: 'User not found'});
+        }
+
+        res.status(200).json({message: 'User promoted successfully'});
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message: 'Server error', error: error.message});
+    }
+}
+
+const demoteUser = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        let userRole = await getUserRole(id);
+
+        if (userRole === null) {
+            return res.status(404).json({message: 'User not found'});
+        }
+
+        if (userRole === 0) {
+            return res.status(400).json({message: 'You cannot demote a user with the role of user'});
+        }
+
+        [result] = await db.query('UPDATE Users SET role = ? WHERE id = ?', [userRole-1,id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({message: 'User not found'});
+        }
+
+        res.status(200).json({message: 'User demoted successfully'});
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message: 'Server error', error: error.message});
+    }
+}
+
 module.exports = {
     getUsers,
     getUserById,
     createUser,
     updateUser,
     updateUserXp,
-    deleteUser
+    deleteUser,
+    promoteUser,
+    demoteUser
 };
