@@ -8,6 +8,9 @@ const {
     deleteRecipeIngredient,
     updateRecipeIngredient
 } = require('../controllers/controller_recipe_ingredient');
+const {requireAuth} = require("../middleware/auth.middleware");
+
+router.use(requireAuth);
 
 router.get('/', getAllRecipeIngredients);                        // GET /recipe-ingredients
 router.get('/recipe/:id_recipe', getRecipeIngredientsByRecipeId); // GET /recipe-ingredients/recipe/:id_recipe
