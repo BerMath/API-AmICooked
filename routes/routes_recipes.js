@@ -14,7 +14,7 @@ const {
     deleteRecipeFilter
 } = require('../controllers/controller_recipe_filters');
 const {getRecipePicture, handleRecipePicture} = require("../controllers/controller_picture");
-const {requireAuth, requireRoleOrSameUser} = require("../middleware/auth.middleware");
+const {requireAuth} = require("../middleware/auth.middleware");
 
 router.use(requireAuth);
 
