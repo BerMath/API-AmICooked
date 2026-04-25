@@ -6,7 +6,8 @@ const {
     createRecipe,
     timeRecipe,
     updateRecipe,
-    deleteRecipe
+    deleteRecipe,
+    getRecipeByUserId
 } = require('../controllers/controller_recipes');
 const {
     getRecipeFilterByRecipeId,
@@ -24,6 +25,7 @@ router.post('/', createRecipe);                                             // P
 router.post('/:id/time', timeRecipe);                                       // POST /recipes/:id/time
 router.put('/:id', updateRecipe);                                           // PUT /recipes/:id
 router.delete('/:id', deleteRecipe);                                        // DELETE /recipes/:id
+router.get('/user/:id', getRecipeByUserId);                                 // GET /recipes/user/:id
 
 router.get('/:id/filters', getRecipeFilterByRecipeId)                       // GET /recipes/:id/filters
 router.post('/:id/filters', createRecipeFilter);                            // POST /recipes/:id/filters
