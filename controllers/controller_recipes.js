@@ -168,11 +168,29 @@ const deleteRecipe = async (req, res) => {
     }
 };
 
+const getRecipeByUserId = async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id);
+        if (!userId) {
+            return res.status(400).json({message: 'User id is required'});
+        }
+        const query = 'SELECT * FROM Recipe WHERE id_user = ?';
+        const [result] = await db.query(query, [userId]);
+
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message: 'Server error', error: error.message});
+    }
+}
+
+
 module.exports = {
     getRecipes,
     getRecipeById,
     createRecipe,
     timeRecipe,
     updateRecipe,
-    deleteRecipe
+    deleteRecipe,
+    getRecipeByUserId
 };
