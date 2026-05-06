@@ -1,5 +1,7 @@
 const express = require('express');
 const app = express();
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsDoc = require('swagger-jsdoc');
 const multer = require('multer');
 require('dotenv').config();
 const { testConnection } = require('./config/database');
@@ -49,6 +51,28 @@ app.get('/', (req, res) => {
 
 // Start the server only when the connexion to the MySQL db is successful
 const PORT = process.env.PORT || 3000;
+
+// Swagger
+const swaggerOptions = {
+  swaggerDefinition: {
+    myapi: '3.0.0',
+    info: {
+      title: 'Am I Cooked ? API',
+      version: '1.0.0',
+      description: 'API documentation',
+    },
+    servers: [
+      {
+        url: 'http://localhost:' + PORT,
+      },
+    ],
+  },
+  apis: ['./routes/*.js'], // files containing annotations as above
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 
 const startServer = async () => {
   try {
