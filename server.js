@@ -15,7 +15,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 const recipesRoutes = require('./routes/routes_recipes');
 const usersRoutes = require('./routes/routes_users');
 const filterRoutes = require('./routes/routes_filters');
-const favoryRoutes = require('./routes/routes_favory');
+const favoriteRoutes = require('./routes/routes_favorite');
 const ingredientRoutes = require('./routes/routes_ingredient');
 const recipeIngredientRoutes = require('./routes/routes_recipe_ingredient');
 const notationRoutes = require('./routes/routes_notation');
@@ -24,7 +24,7 @@ const pictureRoutes = require('./routes/routes_picture');
 app.use('/users', upload.single('img_blob'), usersRoutes);
 app.use('/recipes', upload.single('img_blob'), recipesRoutes);
 app.use('/filters', filterRoutes);
-app.use('/favory', favoryRoutes);
+app.use('/favorite', favoriteRoutes);
 app.use('/ingredient', ingredientRoutes);
 app.use('/recipe_ingredient', recipeIngredientRoutes);
 app.use('/notation', notationRoutes);
@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
       ingredient: '/ingredient',
       pictures: '/pictures',
       filters: '/filters',
-      favory: '/favory',
+      favorite: '/favory',
       recipe_ingredient: '/recipe_ingredient',
       notation: '/notation'
     }
