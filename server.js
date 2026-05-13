@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
       ingredient: '/ingredient',
       pictures: '/pictures',
       filters: '/filters',
-      favorite: '/favory',
+      favorite: '/favorite',
       recipe_ingredient: '/recipe_ingredient',
       notation: '/notation'
     }
