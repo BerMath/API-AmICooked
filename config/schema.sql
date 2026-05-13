@@ -90,7 +90,7 @@ CREATE TABLE `RecipePicture`
     FOREIGN KEY (`id_picture`) REFERENCES `Picture` (`id`) ON DELETE CASCADE
 );
 
-CREATE TABLE `Favory`
+CREATE TABLE `Favorite`
 (
     `id_user`   INT NOT NULL,
     `id_recipe` INT NOT NULL,
