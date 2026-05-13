@@ -121,6 +121,6 @@ router.delete('/:id_user/:id_recipe', deleteFavorite);   // DELETE /favorites/:i
  *       200:
  *         result: true / false
  */
-router.get('/:id_recipe/:id_user', getIfUserHasRecipeAsFavorite);   // GET /favorites/:id_recipe/:id_user
+router.get('/:id_user/:id_recipe', getIfUserHasRecipeAsFavorite);   // GET /favorites/:id_recipe/:id_user
 
 module.exports = router;
