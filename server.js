@@ -54,8 +54,8 @@ const PORT = process.env.PORT || 3000;
 
 // Swagger
 const swaggerOptions = {
-  swaggerDefinition: {
-    myapi: '3.0.0',
+  definition: {
+    openapi: '3.0.0',
     info: {
       title: 'Am I Cooked ? API',
       version: '1.0.0',
