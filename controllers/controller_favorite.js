@@ -3,7 +3,7 @@ const {promisePool: db} = require('../config/database');
 
 const getAllFavorites = async (req, res) => {
     try {
-        const [favorites] = await db.query('SELECT * FROM Favory');
+        const [favorites] = await db.query('SELECT * FROM Favorite');
         res.json(favorites);
     } catch (error) {
         console.error(error);
@@ -15,7 +15,7 @@ const getAllFavorites = async (req, res) => {
 const getFavoritesByUserId = async (req, res) => {
     try {
         const id_user = parseInt(req.params.id_user);
-        const [favorites] = await db.query('SELECT * FROM Favory WHERE id_user = ?', [id_user]);
+        const [favorites] = await db.query('SELECT * FROM Favorite WHERE id_user = ?', [id_user]);
 
         if (favorites.length === 0) {
             return res.status(404).json({message: 'No favorites found for this user'});
@@ -36,7 +36,7 @@ const addFavorite = async (req, res) => {
             return res.status(400).json({message: 'id_user and id_recipe are required'});
         }
 
-        await db.query('INSERT INTO Favory (id_user, id_recipe) VALUES (?, ?)', [id_user, id_recipe]);
+        await db.query('INSERT INTO Favorite (id_user, id_recipe) VALUES (?, ?)', [id_user, id_recipe]);
         res.status(201).json({message: 'Favorite added successfully', id_user, id_recipe});
     } catch (error) {
         console.error(error);
@@ -53,7 +53,7 @@ const deleteFavorite = async (req, res) => {
         const id_user = parseInt(req.params.id_user);
         const id_recipe = parseInt(req.params.id_recipe);
 
-        const [result] = await db.query('DELETE FROM Favory WHERE id_user = ? AND id_recipe = ?', [id_user, id_recipe]);
+        const [result] = await db.query('DELETE FROM Favorite WHERE id_user = ? AND id_recipe = ?', [id_user, id_recipe]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({message: 'Favorite not found'});
@@ -70,7 +70,7 @@ const getIfUserHasRecipeAsFavorite = async (req, res) => {
         const id_user = parseInt(req.params.id_user);
         const id_recipe = parseInt(req.params.id_recipe);
 
-        const [result] = await db.query('SELECT * FROM Favory WHERE id_user = ? AND id_recipe = ?', [id_user, id_recipe]);
+        const [result] = await db.query('SELECT * FROM Favorite WHERE id_user = ? AND id_recipe = ?', [id_user, id_recipe]);
 
         if (result.length === 0) {
             return res.status(404).json({result: false});
