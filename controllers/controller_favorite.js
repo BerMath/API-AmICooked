@@ -70,10 +70,10 @@ const getIfUserHasRecipeAsFavorite = async (req, res) => {
         const id_user = parseInt(req.params.id_user);
         const id_recipe = parseInt(req.params.id_recipe);
 
-        const [result] = await db.query('SELECT FROM Favory WHERE id_user = ? AND id_recipe = ?', [id_user, id_recipe]);
+        const [result] = await db.query('SELECT * FROM Favory WHERE id_user = ? AND id_recipe = ?', [id_user, id_recipe]);
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({message: 'Favorite not found'});
+        if (result.length === 0) {
+            return res.status(404).json({result: false});
         } else {
             res.json({result: true});
         }
