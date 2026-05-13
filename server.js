@@ -24,7 +24,7 @@ const pictureRoutes = require('./routes/routes_picture');
 app.use('/users', upload.single('img_blob'), usersRoutes);
 app.use('/recipes', upload.single('img_blob'), recipesRoutes);
 app.use('/filters', filterRoutes);
-app.use('/favorite', favoriteRoutes);
+app.use('/favorites', favoriteRoutes);
 app.use('/ingredient', ingredientRoutes);
 app.use('/recipe_ingredient', recipeIngredientRoutes);
 app.use('/notation', notationRoutes);
@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
       ingredient: '/ingredient',
       pictures: '/pictures',
       filters: '/filters',
-      favorite: '/favorite',
+      favorite: '/favorites',
       recipe_ingredient: '/recipe_ingredient',
       notation: '/notation'
     }
