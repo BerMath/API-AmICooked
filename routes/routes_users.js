@@ -17,6 +17,7 @@ const {requireAuth, requireRole, requireRoleOrSameUser} = require('../middleware
  * /users/login:
  *   post:
  *     summary: Login a user
+ *     tags: [User]
  *     requestBody:
  *       required: true
  *       content:
@@ -39,6 +40,7 @@ router.post('/login', loginUser);               // POST /users/login
  * /users/refresh:
  *   post:
  *     summary: Refresh user token
+ *     tags: [User]
  *     responses:
  *       200:
  *         description: Token refreshed
@@ -50,6 +52,7 @@ router.post('/refresh', refreshUserToken);      // POST /users/refresh
  * /users/logout:
  *   post:
  *     summary: Logout a user
+ *     tags: [User]
  *     responses:
  *       200:
  *         description: User logged out
@@ -61,6 +64,7 @@ router.post('/logout', logoutUser);             // POST /users/logout
  * /users:
  *   post:
  *     summary: Create a new user
+ *     tags: [User]
  *     requestBody:
  *       required: true
  *       content:
@@ -87,6 +91,7 @@ router.use(requireAuth);
  * /users:
  *   get:
  *     summary: Retrieve all users
+ *     tags: [User]
  *     responses:
  *       200:
  *         description: A list of users
@@ -104,6 +109,7 @@ router.get('/', getUsers);                                                // GET
  * /users/{id}:
  *   get:
  *     summary: Retrieve a user by ID
+ *     tags: [User]
  *     parameters:
  *       - name: id
  *         in: path
@@ -127,6 +133,7 @@ router.get('/:id', getUserById);                                          // GET
  * /users/{id}:
  *   patch:
  *     summary: Update a user
+ *     tags: [User]
  *     parameters:
  *       - name: id
  *         in: path
@@ -150,6 +157,7 @@ router.patch('/:id', requireRoleOrSameUser(2), updateUser);        // PATCH /use
  * /users/{id}/xp:
  *   patch:
  *     summary: Update user XP
+ *     tags: [User]
  *     parameters:
  *       - name: id
  *         in: path
@@ -173,6 +181,7 @@ router.patch('/:id/xp', requireRoleOrSameUser(2), updateUserXp);   // PATCH /use
  * /users/{id}:
  *   delete:
  *     summary: Delete a user
+ *     tags: [User]
  *     parameters:
  *       - name: id
  *         in: path
@@ -190,6 +199,7 @@ router.delete('/:id', requireRoleOrSameUser(2), deleteUser);       // DELETE /us
  * /users/{id}/picture:
  *   get:
  *     summary: Retrieve profile picture for a user
+ *     tags: [User]
  *     parameters:
  *       - name: id
  *         in: path
@@ -207,6 +217,7 @@ router.get('/:id/picture', getProfilePicture);      // GET /users/:id/picture
  * /users/{id}/picture:
  *   post:
  *     summary: Upload profile picture for a user
+ *     tags: [User]
  *     parameters:
  *       - name: id
  *         in: path
@@ -234,6 +245,7 @@ router.post('/:id/picture', handleProfilePicture);  // POST /users/:id/picture
  * /users/{id}/promote:
  *   patch:
  *     summary: Promote a user
+ *     tags: [User]
  *     parameters:
  *       - name: id
  *         in: path
@@ -251,6 +263,7 @@ router.patch('/:id/promote', requireAuth, requireRole(2), promoteUser); // PATCH
  * /users/{id}/demote:
  *   patch:
  *     summary: Demote a user
+ *     tags: [User]
  *     parameters:
  *       - name: id
  *         in: path
