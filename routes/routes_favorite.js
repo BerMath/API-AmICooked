@@ -1,18 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getAllFavorites,
-  getFavoritesByUserId,
-  addFavorite,
-  deleteFavorite
-} = require('../controllers/controller_favory');
+    getAllFavorites,
+    getFavoritesByUserId,
+    addFavorite,
+    deleteFavorite,
+    getIfUserHasRecipeAsFavorite
+} = require('../controllers/controller_favorite');
 const {requireAuth} = require("../middleware/auth.middleware");
 
 router.use(requireAuth);
 
 /**
  * @swagger
- * /favory:
+ * /favorites:
  *   get:
  *     summary: Retrieve all favorites
  *     tags: [Favorites]
@@ -30,7 +31,7 @@ router.get('/', getAllFavorites);                        // GET /favorites
 
 /**
  * @swagger
- * /favory/user/{id_user}:
+ * /favorites/user/{id_user}:
  *   get:
  *     summary: Retrieve favorites by user ID
  *     tags: [Favorites]
@@ -54,7 +55,7 @@ router.get('/user/:id_user', getFavoritesByUserId);      // GET /favorites/user/
 
 /**
  * @swagger
- * /favory:
+ * /favorites:
  *   post:
  *     summary: Add a favorite
  *     tags: [Favorites]
@@ -77,7 +78,7 @@ router.post('/', addFavorite);                           // POST /favorites
 
 /**
  * @swagger
- * /favory/{id_user}/{id_recipe}:
+ * /favorites/{id_user}/{id_recipe}:
  *   delete:
  *     summary: Delete a favorite
  *     tags: [Favorites]
@@ -97,5 +98,29 @@ router.post('/', addFavorite);                           // POST /favorites
  *         description: Favorite deleted
  */
 router.delete('/:id_user/:id_recipe', deleteFavorite);   // DELETE /favorites/:id_user/:id_recipe
+
+
+/**
+ * @swagger
+ * /favorites/{id_user}/{id_recipe}:
+ *  get:
+ *    summary: See if a user has bookmarked a recipe
+ *    tags: [Favorites]
+ *    parameters:
+ *       - name: id_user
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - name: id_recipe
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         result: true / false
+ */
+router.get('/:id_user/:id_recipe', getIfUserHasRecipeAsFavorite);   // GET /favorites/:id_recipe/:id_user
 
 module.exports = router;
