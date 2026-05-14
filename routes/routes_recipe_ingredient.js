@@ -32,7 +32,7 @@ router.get('/', getAllRecipeIngredients);                        // GET /recipe-
 
 /**
  * @swagger
- * /recipe_ingredient/recipe/{id_recipe}:
+ * /recipe_ingredient/recipes/{id_recipe}:
  *   get:
  *     summary: Retrieve recipe ingredients by recipe ID
  *     tags: [Recipe Ingredient]
@@ -52,11 +52,11 @@ router.get('/', getAllRecipeIngredients);                        // GET /recipe-
  *               items:
  *                 type: object
  */
-router.get('/recipe/:id_recipe', getRecipeIngredientsByRecipeId); // GET /recipe-ingredients/recipe/:id_recipe
+router.get('/recipes/:id_recipe', getRecipeIngredientsByRecipeId); // GET /recipe-ingredients/recipes/:id_recipe
 
 /**
  * @swagger
- * /recipe_ingredient/ingredient/{id_ingredient}:
+ * /recipe_ingredient/ingredients/{id_ingredient}:
  *   get:
  *     summary: Retrieve recipe ingredients by ingredient ID
  *     tags: [Recipe Ingredient]
@@ -76,7 +76,7 @@ router.get('/recipe/:id_recipe', getRecipeIngredientsByRecipeId); // GET /recipe
  *               items:
  *                 type: object
  */
-router.get('/ingredient/:id_ingredient', getRecipeIngredientsByIngredientId); // GET /recipe-ingredients/ingredient/:id_ingredient
+router.get('/ingredients/:id_ingredient', getRecipeIngredientsByIngredientId); // GET /recipe-ingredients/ingredients/:id_ingredient
 
 /**
  * @swagger
@@ -105,7 +105,7 @@ router.post('/', addRecipeIngredient);                                        //
 
 /**
  * @swagger
- * /recipe_ingredient/{id_recipe}/{id_ingredient}:
+ * /recipe_ingredient/recipes/{id_recipe}/ingredients/{id_ingredient}:
  *   delete:
  *     summary: Delete a recipe ingredient
  *     tags: [Recipe Ingredient]
@@ -124,11 +124,11 @@ router.post('/', addRecipeIngredient);                                        //
  *       200:
  *         description: Recipe ingredient deleted
  */
-router.delete('/:id_recipe/:id_ingredient', deleteRecipeIngredient);          // DELETE /recipe-ingredients/:id_recipe/:id_ingredient
+router.delete('/recipes/:id_recipe/ingredients/:id_ingredient', deleteRecipeIngredient);          // DELETE /recipe-ingredients/recipes/:id_recipe/ingredients/:id_ingredient
 
 /**
  * @swagger
- * /recipe_ingredient/{id_recipe}/{id_ingredient}:
+ * /recipe_ingredient/recipes/{id_recipe}/ingredients/{id_ingredient}:
  *   put:
  *     summary: Update a recipe ingredient
  *     tags: [Recipe Ingredient]
@@ -153,6 +153,6 @@ router.delete('/:id_recipe/:id_ingredient', deleteRecipeIngredient);          //
  *       200:
  *         description: Recipe ingredient updated
  */
-router.put('/:id_recipe/:id_ingredient', updateRecipeIngredient);             // PUT /recipe-ingredients/:id_recipe/:id_ingredient
+router.put('/recipes/:id_recipe/ingredients/:id_ingredient', updateRecipeIngredient);             // PUT /recipe-ingredients/recipes/:id_recipe/ingredients/:id_ingredient
 
 module.exports = router;
