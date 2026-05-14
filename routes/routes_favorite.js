@@ -31,7 +31,7 @@ router.get('/', getAllFavorites);                        // GET /favorites
 
 /**
  * @swagger
- * /favorites/user/{id_user}:
+ * /favorites/users/{id_user}:
  *   get:
  *     summary: Retrieve favorites by user ID
  *     tags: [Favorites]
@@ -51,7 +51,7 @@ router.get('/', getAllFavorites);                        // GET /favorites
  *               items:
  *                 type: object
  */
-router.get('/user/:id_user', getFavoritesByUserId);      // GET /favorites/user/:id_user
+router.get('/users/:id_user', getFavoritesByUserId);      // GET /favorites/user/:id_user
 
 /**
  * @swagger
@@ -78,7 +78,7 @@ router.post('/', addFavorite);                           // POST /favorites
 
 /**
  * @swagger
- * /favorites/{id_user}/{id_recipe}:
+ * /favorites/users/{id_user}/recipes/{id_recipe}:
  *   delete:
  *     summary: Delete a favorite
  *     tags: [Favorites]
@@ -97,12 +97,12 @@ router.post('/', addFavorite);                           // POST /favorites
  *       200:
  *         description: Favorite deleted
  */
-router.delete('/:id_user/:id_recipe', deleteFavorite);   // DELETE /favorites/:id_user/:id_recipe
+router.delete('/users/:id_user/recipes/:id_recipe', deleteFavorite);   // DELETE /favorites/:id_user/:id_recipe
 
 
 /**
  * @swagger
- * /favorites/{id_user}/{id_recipe}:
+ * /favorites/users/{id_user}/recipes/{id_recipe}:
  *  get:
  *    summary: See if a user has bookmarked a recipe
  *    tags: [Favorites]
@@ -121,6 +121,6 @@ router.delete('/:id_user/:id_recipe', deleteFavorite);   // DELETE /favorites/:i
  *       200:
  *         result: true / false
  */
-router.get('/:id_user/:id_recipe', getIfUserHasRecipeAsFavorite);   // GET /favorites/:id_recipe/:id_user
+router.get('/users/:id_user/recipes/:id_recipe', getIfUserHasRecipeAsFavorite);   // GET /favorites/:id_recipe/:id_user
 
 module.exports = router;

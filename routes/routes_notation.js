@@ -34,7 +34,7 @@ router.get('/', getAllNotations);                                               
 
 /**
  * @swagger
- * /notation/user/{id_user}:
+ * /notation/users/{id_user}:
  *   get:
  *     summary: Retrieve notations by user ID
  *     tags: [Notation]
@@ -54,11 +54,11 @@ router.get('/', getAllNotations);                                               
  *               items:
  *                 type: object
  */
-router.get('/user/:id_user', getNotationByIdUser);                                                          // GET /notation/user/:id_user
+router.get('/users/:id_user', getNotationByIdUser);                                                         // GET /notation/users/:id_user
 
 /**
  * @swagger
- * /notation/recipe/{id_recipe}:
+ * /notation/recipes/{id_recipe}:
  *   get:
  *     summary: Retrieve notations by recipe ID
  *     tags: [Notation]
@@ -78,7 +78,7 @@ router.get('/user/:id_user', getNotationByIdUser);                              
  *               items:
  *                 type: object
  */
-router.get('/recipe/:id_recipe', getNotationByIdRecipe);                                                    // GET /notation/recipe/:id_recipe
+router.get('/recipes/:id_recipe', getNotationByIdRecipe);                                                   // GET /notation/recipes/:id_recipe
 
 /**
  * @swagger
@@ -109,7 +109,7 @@ router.post('/', addNotation);                                                  
 
 /**
  * @swagger
- * /notation/{id}/{id_recipe}:
+ * /notation/{id}/recipes/{id_recipe}:
  *   delete:
  *     summary: Delete a notation
  *     tags: [Notation]
@@ -128,11 +128,11 @@ router.post('/', addNotation);                                                  
  *       200:
  *         description: Notation deleted
  */
-router.delete('/:id/:id_recipe', requireRoleOrSameUser(1), deleteNotation);                          // DELETE /notation/:id_user/:id_recipe
+router.delete('/:id/recipes/:id_recipe', requireRoleOrSameUser(1), deleteNotation);                  // DELETE /notation/:id_user/recipes/:id_recipe
 
 /**
  * @swagger
- * /notation/{id_user}/{id_recipe}:
+ * /notation/users/{id_user}/recipes{id_recipe}:
  *   put:
  *     summary: Update a notation
  *     tags: [Notation]
@@ -157,11 +157,11 @@ router.delete('/:id/:id_recipe', requireRoleOrSameUser(1), deleteNotation);     
  *       200:
  *         description: Notation updated
  */
-router.put('/:id_user/:id_recipe', sameUser, updateNotation);                                                         // PUT /notation/:id_user/:id_recipe
+router.put('/users/:id_user/recipes/:id_recipe', sameUser, updateNotation);                                 // PUT /notation/:id_user/:id_recipe
 
 /**
  * @swagger
- * /notation/recipe/{id_recipe}/average:
+ * /notation/recipes/{id_recipe}/average:
  *   get:
  *     summary: Get average rating for a recipe
  *     tags: [Notation]
@@ -179,11 +179,11 @@ router.put('/:id_user/:id_recipe', sameUser, updateNotation);                   
  *             schema:
  *               type: object
  */
-router.get('/recipe/:id_recipe/average', getAverageRatingByRecipeId);                                       // GET /notation/recipe/:id_recipe/average
+router.get('/recipes/:id_recipe/average', getAverageRatingByRecipeId);                                      // GET /notation/recipes/:id_recipe/average
 
 /**
  * @swagger
- * /notation/recipe/{id_recipe}/comments:
+ * /notation/recipes/{id_recipe}/comments:
  *   get:
  *     summary: Get comments for a recipe
  *     tags: [Notation]
@@ -203,6 +203,6 @@ router.get('/recipe/:id_recipe/average', getAverageRatingByRecipeId);           
  *               items:
  *                 type: object
  */
-router.get('/recipe/:id_recipe/comments', getCommentsByRecipeId);                                           // GET /notation/recipe/:id_recipe/comments
+router.get('/recipes/:id_recipe/comments', getCommentsByRecipeId);                                          // GET /notation/recipes/:id_recipe/comments
 
 module.exports = router;
