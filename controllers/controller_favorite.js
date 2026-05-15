@@ -73,7 +73,7 @@ const getIfUserHasRecipeAsFavorite = async (req, res) => {
         const [result] = await db.query('SELECT * FROM Favorite WHERE id_user = ? AND id_recipe = ?', [id_user, id_recipe]);
 
         if (result.length === 0) {
-            return res.status(404).json({result: false});
+            return res.json({result: false});
         } else {
             res.json({result: true});
         }
