@@ -103,10 +103,10 @@ router.delete('/users/:id_user/recipes/:id_recipe', deleteFavorite);   // DELETE
 /**
  * @swagger
  * /favorites/users/{id_user}/recipes/{id_recipe}:
- *  get:
- *    summary: See if a user has bookmarked a recipe
- *    tags: [Favorites]
- *    parameters:
+ *   get:
+ *     summary: See if a user has bookmarked a recipe
+ *     tags: [Favorites]
+ *     parameters:
  *       - name: id_user
  *         in: path
  *         required: true
@@ -119,7 +119,11 @@ router.delete('/users/:id_user/recipes/:id_recipe', deleteFavorite);   // DELETE
  *           type: integer
  *     responses:
  *       200:
- *         result: true / false
+ *         description: Boolean indicating if the recipe is a favorite for the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: boolean
  */
 router.get('/users/:id_user/recipes/:id_recipe', getIfUserHasRecipeAsFavorite);   // GET /favorites/:id_recipe/:id_user
 
