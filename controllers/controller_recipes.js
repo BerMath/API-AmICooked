@@ -2,7 +2,19 @@ const {promisePool: db} = require('../config/database');
 
 const getRecipes = async (req, res) => {
     try {
-        const [recipes] = await db.query('SELECT * FROM Recipe');
+        let [recipes] = await db.query('SELECT * FROM Recipe');
+
+        await Promise.all(recipes.map(async (recipe) => {
+            recipe.recipe_picture = "";
+            const [recipePicture] = await db.query(
+                'SELECT * FROM Picture INNER JOIN RecipePicture ON Picture.id = RecipePicture.id_picture WHERE RecipePicture.id_recipe = ?',
+                [recipe.id]
+            );
+            if (recipePicture[0] !== undefined) {
+                recipe.recipe_picture = recipePicture[0];
+            }
+        }));
+
         res.json(recipes);
     } catch (error) {
         console.error(error);
@@ -19,13 +31,24 @@ const getRecipeById = async (req, res) => {
             return res.status(404).json({message: 'Recipe not found'});
         }
 
-        res.json(recipes[0]);
+        const recipe = recipes[0];
+        recipe.recipe_picture = "";
+
+        const [recipePicture] = await db.query(
+            'SELECT Picture.img_blob FROM Picture INNER JOIN RecipePicture ON Picture.id = RecipePicture.id_picture WHERE RecipePicture.id_recipe = ?',
+            [recipe.id]
+        );
+
+        if (recipePicture[0] !== undefined) {
+            recipe.recipe_picture = recipePicture[0].img_blob;
+        }
+
+        res.json(recipe);
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
     }
 };
-
 const createRecipe = async (req, res) => {
     try {
         const {
@@ -185,7 +208,6 @@ const getRecipeByUserId = async (req, res) => {
         res.status(500).json({message: 'Server error', error: error.message});
     }
 };
-
 
 
 module.exports = {
