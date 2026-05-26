@@ -1,7 +1,7 @@
+const {promisePool: db} = require('../config/database');
+
 const updateFullRecipe = async (req, res) => {
-    const connection = await db.getConnection();
     try {
-        await connection.beginTransaction();
 
         const id = parseInt(req.params.id);
         const {
@@ -40,7 +40,7 @@ const updateFullRecipe = async (req, res) => {
             }
         }
 
-        const [[existingRecipe]] = await connection.query(
+        const [[existingRecipe]] = await db.query(
             'SELECT id FROM Recipe WHERE id = ?',
             [id]
         );
@@ -49,11 +49,11 @@ const updateFullRecipe = async (req, res) => {
             return res.status(404).json({message: 'Recipe not found'});
         }
 
-        await connection.query(
+        await db.query(
             `UPDATE Recipe
-             SET name = ?,
-                 description = ?,
-                 cooking_time = ?,
+             SET name             = ?,
+                 description      = ?,
+                 cooking_time     = ?,
                  preparation_time = ?,
                  difficulty       = ?,
                  XP_winnable      = ?,
@@ -71,7 +71,7 @@ const updateFullRecipe = async (req, res) => {
             ]
         );
 
-        await connection.query(
+        await db.query(
             'DELETE FROM RecipeIngredient WHERE id_recipe = ?',
             [id]
         );
@@ -84,7 +84,7 @@ const updateFullRecipe = async (req, res) => {
             const quantity = ingredient.quantity || null;
             const unit = ingredient.unit || null;
 
-            const [[existing]] = await connection.query(
+            const [[existing]] = await db.query(
                 'SELECT id, name, category FROM Ingredient WHERE name = ?',
                 [ingName]
             );
@@ -94,22 +94,20 @@ const updateFullRecipe = async (req, res) => {
             if (existing) {
                 id_ingredient = existing.id;
             } else {
-                const [ingResult] = await connection.query(
+                const [ingResult] = await db.query(
                     'INSERT INTO Ingredient (name, category) VALUES (?, ?)',
                     [ingName, category]
                 );
                 id_ingredient = ingResult.insertId;
             }
 
-            await connection.query(
+            await db.query(
                 'INSERT INTO RecipeIngredient (id_recipe, id_ingredient, quantity, unit) VALUES (?, ?, ?, ?)',
                 [id, id_ingredient, quantity, unit]
             );
 
             linkedIngredients.push({id_ingredient, name: ingName, category, quantity, unit});
         }
-
-        await connection.commit();
 
         res.json({
             id,
@@ -124,17 +122,12 @@ const updateFullRecipe = async (req, res) => {
         });
 
     } catch (error) {
-        await connection.rollback();
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
-    } finally {
-        connection.release();
     }
 };
 const createFullRecipe = async (req, res) => {
-    const connection = await db.getConnection();
     try {
-        await connection.beginTransaction();
 
         const {
             name,
@@ -179,7 +172,7 @@ const createFullRecipe = async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        const [recipeResult] = await connection.query(recipeQuery, [
+        const [recipeResult] = await db.query(recipeQuery, [
             name,
             description || null,
             cooking_time || null,
@@ -200,7 +193,7 @@ const createFullRecipe = async (req, res) => {
             const quantity = ingredient.quantity || null;
             const unit = ingredient.unit || null;
 
-            const [[existing]] = await connection.query(
+            const [[existing]] = await db.query(
                 'SELECT id, name, category FROM Ingredient WHERE name = ?',
                 [ingName]
             );
@@ -210,14 +203,14 @@ const createFullRecipe = async (req, res) => {
             if (existing) {
                 id_ingredient = existing.id;
             } else {
-                const [ingResult] = await connection.query(
+                const [ingResult] = await db.query(
                     'INSERT INTO Ingredient (name, category) VALUES (?, ?)',
                     [ingName, category]
                 );
                 id_ingredient = ingResult.insertId;
             }
 
-            await connection.query(
+            await db.query(
                 'INSERT INTO RecipeIngredient (id_recipe, id_ingredient, quantity, unit) VALUES (?, ?, ?, ?)',
                 [id_recipe, id_ingredient, quantity, unit]
             );
@@ -230,8 +223,6 @@ const createFullRecipe = async (req, res) => {
                 unit,
             });
         }
-
-        await connection.commit();
 
         res.status(201).json({
             id: id_recipe,
@@ -247,11 +238,8 @@ const createFullRecipe = async (req, res) => {
         });
 
     } catch (error) {
-        await connection.rollback();
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
-    } finally {
-        connection.release();
     }
 };
 
