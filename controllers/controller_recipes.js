@@ -6,12 +6,18 @@ const getRecipes = async (req, res) => {
 
         await Promise.all(recipes.map(async (recipe) => {
             recipe.recipe_picture = "";
+            recipe.ingredients = []
             const [recipePicture] = await db.query(
                 'SELECT * FROM Picture INNER JOIN RecipePicture ON Picture.id = RecipePicture.id_picture WHERE RecipePicture.id_recipe = ?',
                 [recipe.id]
             );
             if (recipePicture[0] !== undefined) {
                 recipe.recipe_picture = recipePicture[0];
+            }
+            const [recipeIngredients] = await db.query(
+                'SELECT Ingredient.id, Ingredient.name, RecipeIngredient.quantity, RecipeIngredient.unit FROM Ingredient INNER JOIN RecipeIngredient ON Ingredient.id = RecipeIngredient.id_ingredient');
+            if (recipeIngredients.length > 0) {
+                recipe.ingredients = recipeIngredients;
             }
         }));
 
@@ -33,6 +39,7 @@ const getRecipeById = async (req, res) => {
 
         const recipe = recipes[0];
         recipe.recipe_picture = "";
+        recipe.ingredients = []
 
         const [recipePicture] = await db.query(
             'SELECT Picture.img_blob FROM Picture INNER JOIN RecipePicture ON Picture.id = RecipePicture.id_picture WHERE RecipePicture.id_recipe = ?',
@@ -41,6 +48,12 @@ const getRecipeById = async (req, res) => {
 
         if (recipePicture[0] !== undefined) {
             recipe.recipe_picture = recipePicture[0].img_blob;
+        }
+
+        const [recipeIngredients] = await db.query(
+            'SELECT Ingredient.id, Ingredient.name, RecipeIngredient.quantity, RecipeIngredient.unit FROM Ingredient INNER JOIN RecipeIngredient ON Ingredient.id = RecipeIngredient.id_ingredient');
+        if (recipeIngredients.length > 0) {
+            recipe.ingredients = recipeIngredients;
         }
 
         res.json(recipe);
