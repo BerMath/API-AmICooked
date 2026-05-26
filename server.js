@@ -47,7 +47,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Start the server only when the connexion to the MySQL db is successful
+// Start the server only when the connexion to the PostgreSQL db is successful
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
