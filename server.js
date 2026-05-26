@@ -1,5 +1,7 @@
 const express = require('express');
 const app = express();
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsDoc = require('swagger-jsdoc');
 const multer = require('multer');
 require('dotenv').config();
 const { testConnection } = require('./config/database');
@@ -15,7 +17,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 const recipesRoutes = require('./routes/routes_recipes');
 const usersRoutes = require('./routes/routes_users');
 const filterRoutes = require('./routes/routes_filters');
-const favoryRoutes = require('./routes/routes_favory');
+const favoriteRoutes = require('./routes/routes_favorite');
 const ingredientRoutes = require('./routes/routes_ingredient');
 const recipeIngredientRoutes = require('./routes/routes_recipe_ingredient');
 const notationRoutes = require('./routes/routes_notation');
@@ -24,7 +26,7 @@ const pictureRoutes = require('./routes/routes_picture');
 app.use('/users', upload.single('img_blob'), usersRoutes);
 app.use('/recipes', upload.single('img_blob'), recipesRoutes);
 app.use('/filters', filterRoutes);
-app.use('/favory', favoryRoutes);
+app.use('/favorites', favoriteRoutes);
 app.use('/ingredient', ingredientRoutes);
 app.use('/recipe_ingredient', recipeIngredientRoutes);
 app.use('/notation', notationRoutes);
@@ -40,7 +42,7 @@ app.get('/', (req, res) => {
       ingredient: '/ingredient',
       pictures: '/pictures',
       filters: '/filters',
-      favory: '/favory',
+      favorite: '/favorites',
       recipe_ingredient: '/recipe_ingredient',
       notation: '/notation'
     }
@@ -49,6 +51,28 @@ app.get('/', (req, res) => {
 
 // Start the server only when the connexion to the PostgreSQL db is successful
 const PORT = process.env.PORT || 3000;
+
+// Swagger
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Am I Cooked ? API',
+      version: '1.0.0',
+      description: 'API documentation',
+    },
+    servers: [
+      {
+        url: 'http://localhost:' + PORT,
+      },
+    ],
+  },
+  apis: ['./routes/*.js'], // files containing annotations as above
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 
 const startServer = async () => {
   try {

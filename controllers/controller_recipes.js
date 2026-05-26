@@ -1,25 +1,60 @@
 const {pool: db} = require('../config/database');
 
-// Récupérer toutes les Recipes
 const getRecipes = async (req, res) => {
     try {
-        const result = await db.query('SELECT * FROM recipe');
-        res.json(result.rows);
+        let recipes = await db.query('SELECT * FROM recipe');
+
+        await Promise.all(recipes.map(async (recipe) => {
+            recipe.recipe_picture = "";
+            recipe.ingredients = []
+            const recipePicture = await db.query(
+                'SELECT * FROM picture INNER JOIN recipe_picture ON picture.id = recipe_picture.id_picture WHERE recipe_picture.id_recipe = $1',
+                [recipe.id]
+            );
+            if (recipePicture[0] !== undefined) {
+                recipe.recipe_picture = recipePicture[0];
+            }
+            const recipeIngredients = await db.query(
+                'SELECT ingredient.id, ingredient.name, recipe_ingredient.quantity, recipe_ingredient.unit FROM ingredient INNER JOIN RecipeIngredient ON Ingredient.id = RecipeIngredient.id_ingredient');
+            if (recipeIngredients.length > 0) {
+                recipe.ingredients = recipeIngredients.rows;
+            }
+        }));
+
+        res.json(recipes.rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
     }
 };
 
-// Récupérer une Recipe par id
 const getRecipeById = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const result = await db.query('SELECT * FROM recipe WHERE id = $1', [id]);
-        const recipe = result.rows;
+        const recipes = result.rows;
 
-        if (recipe.length === 0) {
+        if (recipes.length === 0) {
             return res.status(404).json({message: 'Recipe not found'});
+        }
+
+        const recipe = recipes[0];
+        recipe.recipe_picture = "";
+        recipe.ingredients = []
+
+        const [recipePicture] = await db.query(
+            'SELECT picture.img_blob FROM picture INNER JOIN recipe_picture ON picture.id = recipe_picture.id_picture WHERE recipe_picture.id_recipe = $1',
+            [recipe.id]
+        );
+
+        if (recipePicture[0] !== undefined) {
+            recipe.recipe_picture = recipePicture[0].img_blob;
+        }
+
+        const [recipeIngredients] = await db.query(
+            'SELECT Ingredient.id, Ingredient.name, RecipeIngredient.quantity, RecipeIngredient.unit FROM Ingredient INNER JOIN RecipeIngredient ON Ingredient.id = RecipeIngredient.id_ingredient');
+        if (recipeIngredients.length > 0) {
+            recipe.ingredients = recipeIngredients;
         }
 
         res.json(recipe[0]);
@@ -28,8 +63,6 @@ const getRecipeById = async (req, res) => {
         res.status(500).json({message: 'Server error', error: error.message});
     }
 };
-
-// Créer une Recipe
 const createRecipe = async (req, res) => {
     try {
         const {
@@ -43,12 +76,10 @@ const createRecipe = async (req, res) => {
             id_user,
         } = req.body;
 
-        // Vérifications
         if (!name) {
             return res.status(400).json({message: 'A name is required'});
         }
 
-        // Requête INSERT
         const query = `
             INSERT INTO recipe
             (name, description, cooking_time, preparation_time, difficulty, XP_winnable, id_picture, id_user)
@@ -61,12 +92,11 @@ const createRecipe = async (req, res) => {
             cooking_time || null,
             preparation_time || null,
             difficulty || null,
-            XP_winnable == null ? 100 : XP_winnable,
+            XP_winnable ?? 100,
             id_picture || null,
             id_user,
         ]);
 
-        // Construire l'objet renvoyé
         const newRecipe = {
             id: result.rows[0].id,
             name,
@@ -74,21 +104,18 @@ const createRecipe = async (req, res) => {
             cooking_time: cooking_time || null,
             preparation_time: preparation_time || null,
             difficulty: difficulty || null,
-            XP_winnable: XP_winnable == null ? 100 : XP_winnable,
+            XP_winnable: XP_winnable ?? 100,
             id_picture: id_picture || null,
             id_user: id_user || null,
         };
 
         res.status(201).json(newRecipe);
-
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
     }
 };
 
-
-// Ajouter du temps de préparation à une Recipe
 const timeRecipe = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -104,7 +131,6 @@ const timeRecipe = async (req, res) => {
             return res.status(404).json({message: 'Recipe not found'});
         }
 
-        // Récupérer la Recipe mise à jour
         const result2 = await db.query('SELECT * FROM recipe WHERE id = $1', [id]);
         const recipe = result2.rows[0];
         recipe.ingredients = JSON.parse(recipe.ingredients);
@@ -116,27 +142,39 @@ const timeRecipe = async (req, res) => {
     }
 };
 
-// Modifier une Recipe
 const updateRecipe = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const {title, ingredients, instructions} = req.body;
+        const {
+            name,
+            description,
+            cooking_time,
+            preparation_time,
+            difficulty,
+            XP_winnable,
+            id_picture,
+        } = req.body;
 
-        if (!title) {
-            return res.status(400).json({message: 'Title is required'});
+        if (!name) {
+            return res.status(400).json({message: 'A name is required'});
         }
 
-        const query = 'UPDATE recipe SET title = $1, ingredients = $2, instructions = $3 WHERE id = $4';
-        const result = await db.query(query, [title, JSON.stringify(ingredients), instructions, id]);
+        const query = 'UPDATE recipe SET name = $1, description = $2, cooking_time = $3, preparation_time = $4, difficulty =$5, XP_winnable = $6, id_picture= $7 WHERE id = $8';
+        const result = await db.query(query, [name,
+            description || null,
+            cooking_time || null,
+            preparation_time || null,
+            difficulty || null,
+            XP_winnable ?? 100,
+            id_picture || null,
+            id,]);
 
         if (result.rowCount === 0) {
             return res.status(404).json({message: 'Recipe not found'});
         }
 
-        // Récupérer la Recipe mise à jour
         const result2 = await db.query('SELECT * FROM recipe WHERE id = $1', [id]);
         const recipe = result2.rows[0];
-        recipe.ingredients = JSON.parse(recipe.ingredients);
 
         res.json(recipe);
     } catch (error) {
@@ -145,7 +183,6 @@ const updateRecipe = async (req, res) => {
     }
 };
 
-// Supprimer une Recipe
 const deleteRecipe = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -176,7 +213,7 @@ const getRecipeByUserId = async (req, res) => {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
     }
-}
+};
 
 
 module.exports = {
