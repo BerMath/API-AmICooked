@@ -1,7 +1,8 @@
-const {promisePool: db} = require('../config/database');
+const {pool: db} = require('../config/database');
 
 async function getUserRole(userId) {
-    const [user] = await db.query('SELECT role FROM Users WHERE id = ?', [userId]);
+    const result = await db.query('SELECT role FROM users WHERE id = $1', [userId]);
+    const user = result.rows;
     if (user.length === 0) {
         return null
     }
