@@ -15,6 +15,7 @@ const {
     deleteRecipeFilter
 } = require('../controllers/controller_recipe_filters');
 const {getRecipePicture, handleRecipePicture} = require("../controllers/controller_picture");
+const {createFullRecipe, updateFullRecipe} = require("../controllers/controller_full_recipe");
 const {requireAuth} = require("../middleware/auth.middleware");
 
 router.use(requireAuth);
@@ -296,5 +297,9 @@ router.get('/:id/picture', getRecipePicture);                               // G
  *         description: Picture uploaded
  */
 router.post('/:id/picture', handleRecipePicture);                           // POST /recipes/:id/picture
+
+router.post('/full', createFullRecipe);
+
+router.patch('/:id/full', updateFullRecipe);
 
 module.exports = router;

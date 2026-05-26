@@ -143,6 +143,11 @@ const handleRecipePicture = async (req, res) => {
             return res.status(400).json({message: 'Invalid recipe id'});
         }
 
+        const [recipe] = await db.query('SELECT id FROM Recipe WHERE id = ?', [id]);
+        if (recipe.length === 0) {
+            return res.status(404).json({message: 'Recipe not found'});
+        }
+
         // Read image from form-data (req.file.buffer) or JSON (req.body.img_blob)
         const img_blob = req.file ? req.file.buffer : req.body?.img_blob;
 
@@ -218,4 +223,3 @@ module.exports = {
     getRecipePicture,
     handleProfilePicture
 };
-
