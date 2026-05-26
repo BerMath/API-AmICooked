@@ -1,17 +1,10 @@
-const {promisePool: db} = require('../config/database');
+const {pool: db} = require('../config/database');
 
 // Récupérer toutes les Recipes
 const getRecipes = async (req, res) => {
     try {
-        const [recipes] = await db.query('SELECT * FROM Recipe');
-
-        /*// Parser les ingredients JSON
-        const formattedRecipes = recipes.map(recipe => ({
-          ... recipe,
-          ingredients: JSON.parse(recipe.ingredients)
-        }));*/
-
-        res.json(recipes);
+        const result = await db.query('SELECT * FROM recipe');
+        res.json(result.rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
@@ -22,9 +15,10 @@ const getRecipes = async (req, res) => {
 const getRecipeById = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const recipe = await db.query('SELECT * FROM Recipe WHERE id = ?', [id]);
+        const result = await db.query('SELECT * FROM recipe WHERE id = $1', [id]);
+        const recipe = result.rows;
 
-        if (recipe === null) {
+        if (recipe.length === 0) {
             return res.status(404).json({message: 'Recipe not found'});
         }
 
@@ -56,12 +50,12 @@ const createRecipe = async (req, res) => {
 
         // Requête INSERT
         const query = `
-            INSERT INTO Recipe
+            INSERT INTO recipe
             (name, description, cooking_time, preparation_time, difficulty, XP_winnable, id_picture, id_user)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id
         `;
 
-        const [result] = await db.query(query, [
+        const result = await db.query(query, [
             name,
             description || null,
             cooking_time || null,
@@ -74,7 +68,7 @@ const createRecipe = async (req, res) => {
 
         // Construire l'objet renvoyé
         const newRecipe = {
-            id: result.insertId,
+            id: result.rows[0].id,
             name,
             description: description || null,
             cooking_time: cooking_time || null,
@@ -104,15 +98,15 @@ const timeRecipe = async (req, res) => {
             return res.status(400).json({message: 'Time is required'});
         }
 
-        const [result] = await db.query('UPDATE Recipe SET time = ? WHERE id = ?', [time, id]);
+        const result = await db.query('UPDATE recipe SET time = $1 WHERE id = $2', [time, id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({message: 'Recipe not found'});
         }
 
         // Récupérer la Recipe mise à jour
-        const [recipes] = await db.query('SELECT * FROM Recipe WHERE id = ?', [id]);
-        const recipe = recipes[0];
+        const result2 = await db.query('SELECT * FROM recipe WHERE id = $1', [id]);
+        const recipe = result2.rows[0];
         recipe.ingredients = JSON.parse(recipe.ingredients);
 
         res.json(recipe);
@@ -132,16 +126,16 @@ const updateRecipe = async (req, res) => {
             return res.status(400).json({message: 'Title is required'});
         }
 
-        const query = 'UPDATE Recipe SET title = ?, ingredients = ?, instructions = ? WHERE id = ?';
-        const [result] = await db.query(query, [title, JSON.stringify(ingredients), instructions, id]);
+        const query = 'UPDATE recipe SET title = $1, ingredients = $2, instructions = $3 WHERE id = $4';
+        const result = await db.query(query, [title, JSON.stringify(ingredients), instructions, id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({message: 'Recipe not found'});
         }
 
         // Récupérer la Recipe mise à jour
-        const [recipes] = await db.query('SELECT * FROM Recipe WHERE id = ?', [id]);
-        const recipe = recipes[0];
+        const result2 = await db.query('SELECT * FROM recipe WHERE id = $1', [id]);
+        const recipe = result2.rows[0];
         recipe.ingredients = JSON.parse(recipe.ingredients);
 
         res.json(recipe);
@@ -155,9 +149,9 @@ const updateRecipe = async (req, res) => {
 const deleteRecipe = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const [result] = await db.query('DELETE FROM Recipe WHERE id = ? ', [id]);
+        const result = await db.query('DELETE FROM recipe WHERE id = $1', [id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({message: 'Recipe not found'});
         }
 
@@ -174,10 +168,10 @@ const getRecipeByUserId = async (req, res) => {
         if (!userId) {
             return res.status(400).json({message: 'User id is required'});
         }
-        const query = 'SELECT * FROM Recipe WHERE id_user = ?';
-        const [result] = await db.query(query, [userId]);
+        const query = 'SELECT * FROM recipe WHERE id_user = $1';
+        const result = await db.query(query, [userId]);
 
-        return res.status(200).json(result);
+        return res.status(200).json(result.rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});

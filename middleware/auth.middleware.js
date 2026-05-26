@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const {hasRequiredRole} = require('../services/role.service');
 
 function requireAuth(req, res, next) {
-    const authHeader = req.headers['access-token'];
+    const authHeader = req.headers['Authorization'] || req.headers['authorization'] || req.headers['access-token'];
 
     if (!authHeader?.startsWith('Bearer ')) {
         return res.status(401).json({error: 'Missing Token'});

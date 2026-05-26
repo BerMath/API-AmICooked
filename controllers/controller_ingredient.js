@@ -1,10 +1,10 @@
-const { promisePool: db } = require('../config/database');
+const { pool: db } = require('../config/database');
 
 // Récupérer tous les ingrédients
 const getAllIngredients = async (req, res) => {
   try {
-    const [ingredients] = await db.query('SELECT * FROM Ingredient');
-    res.json(ingredients);
+    const result = await db.query('SELECT * FROM ingredient');
+    res.json(result.rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -14,7 +14,8 @@ const getAllIngredients = async (req, res) => {
 const getIngredientById = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const [ingredients] = await promisePool.query('SELECT * FROM Ingredient WHERE id = ?', [id]);
+    const result = await db.query('SELECT * FROM ingredient WHERE id = $1', [id]);
+    const ingredients = result.rows;
 
     if (ingredients.length === 0) {
       return res.status(404).json({ message: 'Ingredient not found' });
@@ -29,7 +30,8 @@ const getIngredientById = async (req, res) => {
 const getIngredientByName = async (req, res) => {
   try {
     const name = req.params.name;
-    const [ingredients] = await promisePool.query('SELECT * FROM Ingredient WHERE name = ?', [name]);
+    const result = await db.query('SELECT * FROM ingredient WHERE name = $1', [name]);
+    const ingredients = result.rows;
 
     if (ingredients.length === 0) {
       return res.status(404).json({ message: 'Ingredient not found' });
@@ -44,7 +46,8 @@ const getIngredientByName = async (req, res) => {
 const getIngredientByCategory = async (req, res) => {
   try {
     const category = req.params.category;
-    const [ingredients] = await promisePool.query('SELECT * FROM Ingredient WHERE category = ?', [category]);
+    const result = await db.query('SELECT * FROM ingredient WHERE category = $1', [category]);
+    const ingredients = result.rows;
 
     if (ingredients.length === 0) {
       return res.status(404).json({ message: 'No ingredients found for this category' });
@@ -65,15 +68,15 @@ const createIngredient = async (req, res) => {
       return res.status(400).json({ message: 'Name is required' });
     }
 
-    const [result] = await promisePool.query(
-      'INSERT INTO Ingredient (name, category) VALUES (?, ?)',
+    const result = await db.query(
+      'INSERT INTO ingredient (name, category) VALUES ($1, $2) RETURNING id',
       [name, category || null]
     );
 
-    res.status(201).json({ message: 'Ingredient created', id: result.insertId, name, category });
+    res.status(201).json({ message: 'Ingredient created', id: result.rows[0].id, name, category });
   } catch (error) {
     console.error(error);
-    if (error.code === 'ER_DUP_ENTRY') {
+    if (error.code === '23505') {
       return res.status(409).json({ message: 'This ingredient already exists' });
     }
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -84,9 +87,9 @@ const createIngredient = async (req, res) => {
 const deleteIngredient = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const [result] = await promisePool.query('DELETE FROM Ingredient WHERE id = ?', [id]);
+    const result = await db.query('DELETE FROM ingredient WHERE id = $1', [id]);
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ message: 'Ingredient not found' });
     }
     res.json({ message: 'Ingredient deleted successfully' });
@@ -105,18 +108,18 @@ const updateIngredient = async (req, res) => {
       return res.status(400).json({ message: 'Name is required' });
     }
 
-    const [result] = await promisePool.query(
-      'UPDATE Ingredient SET name = ?, category = ? WHERE id = ?',
+    const result = await db.query(
+      'UPDATE ingredient SET name = $1, category = $2 WHERE id = $3',
       [name, category || null, id]
     );
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ message: 'Ingredient not found' });
     }
     res.json({ message: 'Ingredient updated successfully', id, name, category });
   } catch (error) {
     console.error(error);
-    if (error.code === 'ER_DUP_ENTRY') {
+    if (error.code === '23505') {
       return res.status(409).json({ message: 'This ingredient already exists' });
     }
     res.status(500).json({ message: 'Server error', error: error.message });

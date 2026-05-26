@@ -1,9 +1,9 @@
-const { promisePool: db } = require('../config/database');
+const { pool: db } = require('../config/database');
 
 const getAllRecipeIngredients = async (req, res) => {
   try {
-    const [recipeIngredients] = await db.query('SELECT * FROM RecipeIngredient');
-    res.json(recipeIngredients);
+    const result = await db.query('SELECT * FROM recipe_ingredient');
+    res.json(result.rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -13,7 +13,8 @@ const getAllRecipeIngredients = async (req, res) => {
 const getRecipeIngredientsByRecipeId = async (req, res) => {
   try {
     const id_recipe = parseInt(req.params.id_recipe);
-    const [recipeIngredients] = await promisePool.query('SELECT * FROM RecipeIngredient WHERE id_recipe = ?', [id_recipe]);
+    const result = await db.query('SELECT * FROM recipe_ingredient WHERE id_recipe = $1', [id_recipe]);
+    const recipeIngredients = result.rows;
 
     if (recipeIngredients.length === 0) {
       return res.status(404).json({ message: 'No ingredients found for this recipe' });
@@ -28,7 +29,8 @@ const getRecipeIngredientsByRecipeId = async (req, res) => {
 const getRecipeIngredientsByIngredientId = async (req, res) => {
     try {
         const id_ingredient = parseInt(req.params.id_ingredient);
-        const [recipeIngredients] = await promisePool.query('SELECT * FROM RecipeIngredient WHERE id_ingredient = ?', [id_ingredient]);
+        const result = await db.query('SELECT * FROM recipe_ingredient WHERE id_ingredient = $1', [id_ingredient]);
+        const recipeIngredients = result.rows;
 
         if (recipeIngredients.length === 0) {
             return res.status(404).json({ message: 'No recipes found for this ingredient' });
@@ -48,7 +50,7 @@ const addRecipeIngredient = async (req, res) => {
             return res.status(400).json({ message: 'id_recipe and id_ingredient are required' });
         }
 
-        await promisePool.query('INSERT INTO RecipeIngredient (id_recipe, id_ingredient, quantity, unit) VALUES (?, ?, ?, ?)', [id_recipe, id_ingredient, quantity || null, unit || null]);
+        await db.query('INSERT INTO recipe_ingredient (id_recipe, id_ingredient, quantity, unit) VALUES ($1, $2, $3, $4)', [id_recipe, id_ingredient, quantity || null, unit || null]);
         res.status(201).json({ message: 'Recipe ingredient added successfully', id_recipe, id_ingredient, quantity, unit });
     } catch (error) {
         console.error(error);
@@ -61,9 +63,9 @@ const deleteRecipeIngredient = async (req, res) => {
         const id_recipe = parseInt(req.params.id_recipe);
         const id_ingredient = parseInt(req.params.id_ingredient);
 
-        const [result] = await promisePool.query('DELETE FROM RecipeIngredient WHERE id_recipe = ? AND id_ingredient = ?', [id_recipe, id_ingredient]);
+        const result = await db.query('DELETE FROM recipe_ingredient WHERE id_recipe = $1 AND id_ingredient = $2', [id_recipe, id_ingredient]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Recipe ingredient not found' });
         }
         res.json({ message: 'Recipe ingredient deleted successfully' });
@@ -83,9 +85,9 @@ const updateRecipeIngredient = async (req, res) => {
             return res.status(400).json({ message: 'new_id_recipe and new_id_ingredient are required' });
         }
 
-        const [result] = await promisePool.query('UPDATE RecipeIngredient SET id_recipe = ?, id_ingredient = ? WHERE id_recipe = ? AND id_ingredient = ?', [new_id_recipe, new_id_ingredient, id_recipe, id_ingredient]);
+        const result = await db.query('UPDATE recipe_ingredient SET id_recipe = $1, id_ingredient = $2 WHERE id_recipe = $3 AND id_ingredient = $4', [new_id_recipe, new_id_ingredient, id_recipe, id_ingredient]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({ message: 'Recipe ingredient not found' });
         }
         res.json({ message: 'Recipe ingredient updated successfully', new_id_recipe, new_id_ingredient });

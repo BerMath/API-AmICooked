@@ -1,9 +1,9 @@
-const { promisePool: db } = require('../config/database');
+const { pool: db } = require('../config/database');
 
 const getFilters = async (req, res) => {
     try {
-        const [filters] = await db.query('SELECT * FROM Filters');
-        res.json(filters);
+        const result = await db.query('SELECT * FROM filters');
+        res.json(result.rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server Error', error: error.message});
@@ -13,7 +13,8 @@ const getFilters = async (req, res) => {
 const getFilterById = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const [filters] = await db.query('SELECT * FROM Filters WHERE id = ?', [id]);
+        const result = await db.query('SELECT * FROM filters WHERE id = $1', [id]);
+        const filters = result.rows;
 
         if (filters.length === 0) {
             return res.status(404).json({message: 'Filter not found'});
@@ -33,11 +34,11 @@ const createFilter = async (req, res) => {
         return res.status(400).json({message: 'Name and type are required'});
     }
 
-    const query = 'INSERT INTO Filters (name, type) VALUES (?, ?)';
-    const [result] = await db.query(query, [name, type]);
+    const query = 'INSERT INTO filters (name, type) VALUES ($1, $2) RETURNING id';
+    const result = await db.query(query, [name, type]);
 
     const newFilter = {
-        id: result.insertId,
+        id: result.rows[0].id,
         name: name,
         type: type
     };
@@ -52,9 +53,9 @@ const createFilter = async (req, res) => {
 const deleteFilter = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const [result] = await db.query('DELETE FROM Filters WHERE id = ?', [id]);
+        const result = await db.query('DELETE FROM filters WHERE id = $1', [id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({message: 'Filter not found'});
         }
     } catch (error) {

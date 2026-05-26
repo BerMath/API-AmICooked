@@ -1,10 +1,10 @@
-const {promisePool: db} = require('../config/database');
+const {pool: db} = require('../config/database');
 
 // Retrieve all images
 const getAllPictures = async (req, res) => {
     try {
-        const [pictures] = await db.query('SELECT * FROM Picture');
-        res.json(pictures);
+        const result = await db.query('SELECT * FROM picture');
+        res.json(result.rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
@@ -15,7 +15,8 @@ const getAllPictures = async (req, res) => {
 const getPictureById = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const [pictures] = await db.query('SELECT * FROM Picture WHERE id = ?', [id]);
+        const result = await db.query('SELECT * FROM picture WHERE id = $1', [id]);
+        const pictures = result.rows;
 
         if (pictures.length === 0) {
             return res.status(404).json({message: 'Picture not found'});
@@ -37,12 +38,12 @@ const addPicture = async (req, res) => {
             return res.status(400).json({message: 'Blob is required'});
         }
 
-        const [result] = await db.query(
-            'INSERT INTO Picture (img_blob, alt_text) VALUES (?, ?)',
+        const result = await db.query(
+            'INSERT INTO picture (img_blob, alt_text) VALUES ($1, $2) RETURNING id',
             [img_blob, alt_text || null]
         );
 
-        res.status(201).json({message: 'Picture added successfully', id: result.insertId, alt_text});
+        res.status(201).json({message: 'Picture added successfully', id: result.rows[0].id, alt_text});
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
@@ -60,12 +61,12 @@ const updatePicture = async (req, res) => {
             return res.status(400).json({message: 'Blob is required'});
         }
 
-        const [result] = await db.query(
-            'UPDATE Picture SET img_blob = ?, alt_text = ? WHERE id = ?',
+        const result = await db.query(
+            'UPDATE picture SET img_blob = $1, alt_text = $2 WHERE id = $3',
             [img_blob, alt_text || null, id]
         );
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({message: 'Picture not found'});
         }
         res.json({message: 'Picture updated successfully'});
@@ -79,9 +80,9 @@ const updatePicture = async (req, res) => {
 const deletePicture = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const [result] = await db.query('DELETE FROM Picture WHERE id = ?', [id]);
+        const result = await db.query('DELETE FROM picture WHERE id = $1', [id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({message: 'Picture not found'});
         }
         res.json({message: 'Picture deleted successfully'});
@@ -107,27 +108,27 @@ const handleProfilePicture = async (req, res) => {
             return res.status(400).json({message: 'Blob is required'});
         }
 
-        const [isProfilePictureExist] = await db.query('SELECT * FROM ProfilePicture WHERE id_user = ?', [id]);
+        const isProfilePictureExist = await db.query('SELECT * FROM profile_picture WHERE id_user = $1', [id]);
         let pictureResult;
-        if (isProfilePictureExist.length > 0) {
+        if (isProfilePictureExist.rows.length > 0) {
             const date = new Date();
             const actualTimeStamp = date.toISOString().split('T')[0] + ' '
                 + date.toTimeString().split(' ')[0];
-            [pictureResult] = await db.query('UPDATE Picture INNER JOIN ProfilePicture ON Picture.id = ProfilePicture.id_picture SET Picture.img_blob = ?, Picture.uploaded_at = ? WHERE ProfilePicture.id_user = ?', [img_blob, actualTimeStamp, id]);
+            pictureResult = await db.query('UPDATE picture SET img_blob = $1, uploaded_at = $2 WHERE id = (SELECT id_picture FROM profile_picture WHERE id_user = $3) RETURNING id', [img_blob, actualTimeStamp, id]);
         } else {
             // Create picture entry first
-            [pictureResult] = await db.query(
-                'INSERT INTO Picture (img_blob, alt_text) VALUES (?, ?)',
+            pictureResult = await db.query(
+                'INSERT INTO picture (img_blob, alt_text) VALUES ($1, $2) RETURNING id',
                 [img_blob, `user ${id}'s profile picture`]
             );
             // Link to user
             await db.query(
-                'INSERT INTO ProfilePicture (id_user, id_picture) VALUES (?, ?)',
-                [id, pictureResult.insertId]
+                'INSERT INTO profile_picture (id_user, id_picture) VALUES ($1, $2)',
+                [id, pictureResult.rows[0].id]
             );
         }
 
-        res.status(201).json({message: 'Profile picture created successfully', id: pictureResult.insertId});
+        res.status(201).json({message: 'Profile picture created successfully', id: pictureResult.rows[0].id});
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
@@ -151,26 +152,26 @@ const handleRecipePicture = async (req, res) => {
         }
 
 
-        const [isRecipePictureExist] = await db.query('SELECT * FROM RecipePicture WHERE id_recipe = ?', [id]);
+        const isRecipePictureExist = await db.query('SELECT * FROM recipe_picture WHERE id_recipe = $1', [id]);
         let pictureResult;
-        if (isRecipePictureExist.length > 0) {
+        if (isRecipePictureExist.rows.length > 0) {
             const date = new Date();
             const actualTimeStamp = date.toISOString().split('T')[0] + ' '
                 + date.toTimeString().split(' ')[0];
-            [pictureResult] = await db.query('UPDATE Picture INNER JOIN RecipePicture ON Picture.id = RecipePicture.id_picture SET Picture.img_blob = ?, Picture.uploaded_at = ? WHERE RecipePicture.id_recipe = ?', [img_blob, actualTimeStamp, id]);
+            pictureResult = await db.query('UPDATE picture SET img_blob = $1, uploaded_at = $2 WHERE id = (SELECT id_picture FROM recipe_picture WHERE id_recipe = $3) RETURNING id', [img_blob, actualTimeStamp, id]);
         } else {
             // Create picture entry first
-            [pictureResult] = await db.query(
-                'INSERT INTO Picture (img_blob, alt_text) VALUES (?, ?)',
+            pictureResult = await db.query(
+                'INSERT INTO picture (img_blob, alt_text) VALUES ($1, $2) RETURNING id',
                 [img_blob, `recipe ${id}'s picture`]
             );
             // Link to user
             await db.query(
-                'INSERT INTO RecipePicture (id_recipe, id_picture) VALUES (?, ?)',
-                [id, pictureResult.insertId]
+                'INSERT INTO recipe_picture (id_recipe, id_picture) VALUES ($1, $2)',
+                [id, pictureResult.rows[0].id]
             );
         }
-        res.status(201).json({message: 'Recipe picture created successfully', id: pictureResult.insertId});
+        res.status(201).json({message: 'Recipe picture created successfully', id: pictureResult.rows[0].id});
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
@@ -181,7 +182,8 @@ const handleRecipePicture = async (req, res) => {
 const getProfilePicture = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const [profilePicture] = await db.query('SELECT Picture.img_blob FROM Picture INNER JOIN ProfilePicture ON Picture.id = ProfilePicture.id_picture WHERE ProfilePicture.id_user = ?', [id]);
+        const result = await db.query('SELECT picture.img_blob FROM picture INNER JOIN profile_picture ON picture.id = profile_picture.id_picture WHERE profile_picture.id_user = $1', [id]);
+        const profilePicture = result.rows;
         if (profilePicture.length === 0) {
             return res.status(404).json({message: 'Profile picture not found'});
         }
@@ -196,7 +198,8 @@ const getProfilePicture = async (req, res) => {
 const getRecipePicture = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const [recipePicture] = await db.query('SELECT Picture.img_blob FROM Picture INNER JOIN RecipePicture ON Picture.id = RecipePicture.id_picture WHERE RecipePicture.id_recipe = ?', [id]);
+        const result = await db.query('SELECT picture.img_blob FROM picture INNER JOIN recipe_picture ON picture.id = recipe_picture.id_picture WHERE recipe_picture.id_recipe = $1', [id]);
+        const recipePicture = result.rows;
         if (recipePicture.length === 0) {
             return res.status(404).json({message: 'Recipe picture not found'});
         }

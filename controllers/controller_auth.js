@@ -1,4 +1,4 @@
-const {promisePool: db} = require('../config/database');
+const {pool: db} = require('../config/database');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require('crypto');
@@ -61,7 +61,7 @@ const saveRefreshSession = async (userId, refreshToken, req) => {
     const ipAddress = req.ip || req.socket?.remoteAddress || null;
 
     await db.query(
-        'INSERT INTO UserSessions (user_id, token_hash, expires_at, user_agent, ip_address) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO user_sessions (user_id, token_hash, expires_at, user_agent, ip_address) VALUES ($1, $2, $3, $4, $5)',
         [userId, tokenHash, getRefreshExpiryDate(), userAgent, ipAddress]
     );
 };
@@ -83,8 +83,9 @@ const loginUser = async (req, res) => {
             return res.status(400).json({message: 'Email and password are required'});
         }
 
-        const query = 'SELECT * FROM Users WHERE email = ?';
-        const [rows] = await db.query(query, [email]);
+        const query = 'SELECT * FROM users WHERE email = $1';
+        const result = await db.query(query, [email]);
+        const rows = result.rows;
 
         if (!rows || rows.length === 0) {
             return res.status(404).json({message: 'Wrong email or password'});
@@ -133,22 +134,24 @@ const refreshUserToken = async (req, res) => {
         }
 
         const currentHash = hashToken(refreshToken);
-        const [sessions] = await db.query(
-            'SELECT id FROM UserSessions WHERE user_id = ? AND token_hash = ? AND revoked_at IS NULL AND expires_at > NOW()',
+        const result = await db.query(
+            'SELECT id FROM user_sessions WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL AND expires_at > NOW()',
             [payload.id, currentHash]
         );
+        const sessions = result.rows;
 
         if (sessions.length === 0) {
             return res.status(401).json({message: 'Refresh session not found or expired'});
         }
 
-        const [users] = await db.query('SELECT id, email, username FROM Users WHERE id = ?', [payload.id]);
+        const result2 = await db.query('SELECT id, email, username FROM users WHERE id = $1', [payload.id]);
+        const users = result2.rows;
         if (users.length === 0) {
             return res.status(404).json({message: 'User not found'});
         }
 
         // Rotate refresh token: revoke old session then create a new one.
-        await db.query('UPDATE UserSessions SET revoked_at = NOW() WHERE id = ?', [sessions[0].id]);
+        await db.query('UPDATE user_sessions SET revoked_at = NOW() WHERE id = $1', [sessions[0].id]);
 
         const user = users[0];
         const newAccessToken = signAccessToken(user);
@@ -184,10 +187,10 @@ const logoutUser = async (req, res) => {
         }
 
         if (allDevices === true) {
-            await db.query('UPDATE UserSessions SET revoked_at = NOW() WHERE user_id = ? AND revoked_at IS NULL', [payload.id]);
+            await db.query('UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL', [payload.id]);
         } else {
             await db.query(
-                'UPDATE UserSessions SET revoked_at = NOW() WHERE user_id = ? AND token_hash = ? AND revoked_at IS NULL',
+                'UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL',
                 [payload.id, hashToken(refreshToken)]
             );
         }

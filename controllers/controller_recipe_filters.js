@@ -1,4 +1,4 @@
-const {promisePool: db} = require('../config/database');
+const {pool: db} = require('../config/database');
 
 const getRecipeFilterByRecipeId = async (req, res) => {
     try {
@@ -7,9 +7,10 @@ const getRecipeFilterByRecipeId = async (req, res) => {
             return res.status(400).json({message: 'Invalid recipe id'});
         }
 
-        const [recipeFilters] = await db.query(`SELECT *
-                                                FROM RecipeFiltres
-                                                WHERE id_recipe = ?`, [recipeId]);
+        const result = await db.query(`SELECT *
+                                                FROM recipe_filtres
+                                                WHERE id_recipe = $1`, [recipeId]);
+        const recipeFilters = result.rows;
         if (recipeFilters.length === 0) {
             return res.status(404).json({message: 'No filters found for this recipe'});
         }
@@ -28,17 +29,14 @@ const createRecipeFilter = async (req, res) => {
             return res.status(400).json({message: 'Recipe id or filter id missing'});
         }
 
-        const query = 'INSERT INTO RecipeFiltres(id_recipe, id_filter) VALUES (?,?)';
-        const [result] = await db.query(query, [id_recipe, id_filter]);
+        const query = 'INSERT INTO recipe_filtres(id_recipe, id_filter) VALUES ($1, $2) RETURNING id_recipe, id_filter';
+        const result = await db.query(query, [id_recipe, id_filter]);
 
-        if (!result) {
+        if (!result.rows.length) {
             return res.status(404).json({message: 'No filters found for this recipe'});
         }
 
-        const newRecipeFilter = {
-            id_recipe,
-            id_filter,
-        };
+        const newRecipeFilter = result.rows[0];
 
         res.status(201).json(newRecipeFilter);
     } catch (error) {
@@ -51,12 +49,12 @@ const deleteRecipeFilter = async (req, res) => {
     try {
         const id_recipe = parseInt(req.params.id_recipe);
         const id_filter = parseInt(req.params.id_filter);
-        const [result] = await db.query(`DELETE
-                                         FROM RecipeFiltres
-                                         WHERE id_recipe = ?
-                                           AND id_filter = ?`, [id_recipe, id_filter]);
+        const result = await db.query(`DELETE
+                                         FROM recipe_filtres
+                                         WHERE id_recipe = $1
+                                           AND id_filter = $2`, [id_recipe, id_filter]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({message: 'Recipe filter Not Found'});
         }
 

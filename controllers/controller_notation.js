@@ -1,10 +1,10 @@
-const { promisePool: db } = require('../config/database');
+const { pool: db } = require('../config/database');
 
 
 const getAllNotations = async (req, res) => {
   try {
-    const [notations] = await db.query('SELECT * FROM Notation');
-    res.json(notations);
+    const result = await db.query('SELECT * FROM notation');
+    res.json(result.rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -15,7 +15,8 @@ const getAllNotations = async (req, res) => {
 const getNotationByIdUser = async (req, res) => {
   try {
     const id_user = parseInt(req.params.id_user);
-    const [notations] = await db.query('SELECT * FROM Notation WHERE id_user = ?', [id_user]);
+    const result = await db.query('SELECT * FROM notation WHERE id_user = $1', [id_user]);
+    const notations = result.rows;
 
     if (notations.length === 0) {
       return res.status(404).json({ message: 'No notations found for this user' });
@@ -31,7 +32,8 @@ const getNotationByIdUser = async (req, res) => {
 const getNotationByIdRecipe = async (req, res) => {
   try {
     const id_recipe = parseInt(req.params.id_recipe);
-    const [notations] = await db.query('SELECT * FROM Notation WHERE id_recipe = ?', [id_recipe]);
+    const result = await db.query('SELECT * FROM notation WHERE id_recipe = $1', [id_recipe]);
+    const notations = result.rows;
 
     if (notations.length === 0) {
       return res.status(404).json({ message: 'No notations found for this recipe' });
@@ -57,13 +59,13 @@ const addNotation = async (req, res) => {
     }
 
     await db.query(
-      'INSERT INTO Notation (id_user, id_recipe, rating, comment) VALUES (?, ?, ?, ?)',
+      'INSERT INTO notation (id_user, id_recipe, rating, comment) VALUES ($1, $2, $3, $4)',
       [id_user, id_recipe, rating, comment || null]
     );
     res.status(201).json({ message: 'Notation added successfully', id_user, id_recipe, rating, comment });
   } catch (error) {
     console.error(error);
-    if (error.code === 'ER_DUP_ENTRY') {
+    if (error.code === '23505') {
       return res.status(409).json({ message: 'This user has already rated this recipe' });
     }
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -76,9 +78,9 @@ const deleteNotation = async (req, res) => {
     const id_user = parseInt(req.params.id);
     const id_recipe = parseInt(req.params.id_recipe);
 
-    const [result] = await db.query('DELETE FROM Notation WHERE id_user = ? AND id_recipe = ?', [id_user, id_recipe]);
+    const result = await db.query('DELETE FROM notation WHERE id_user = $1 AND id_recipe = $2', [id_user, id_recipe]);
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ message: 'Notation not found' });
     }
     res.json({ message: 'Notation deleted successfully' });
@@ -103,12 +105,12 @@ const updateNotation = async (req, res) => {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
 
-    const [result] = await db.query(
-      'UPDATE Notation SET rating = ?, comment = ?, updated_at = NOW() WHERE id_user = ? AND id_recipe = ?',
+    const result = await db.query(
+      'UPDATE notation SET rating = $1, comment = $2, updated_at = NOW() WHERE id_user = $3 AND id_recipe = $4',
       [rating, comment || null, id_user, id_recipe]
     );
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ message: 'Notation not found' });
     }
     res.json({ message: 'Notation updated successfully' });
@@ -122,12 +124,13 @@ const updateNotation = async (req, res) => {
 const getAverageRatingByRecipeId = async (req, res) => {
   try {
     const id_recipe = parseInt(req.params.id_recipe);
-    const [result] = await db.query('SELECT AVG(rating) AS average_rating FROM Notation WHERE id_recipe = ?', [id_recipe]);
+    const result = await db.query('SELECT AVG(rating) AS average_rating FROM notation WHERE id_recipe = $1', [id_recipe]);
+    const rows = result.rows;
 
-    if (result.length === 0 || result[0].average_rating === null) {
+    if (rows.length === 0 || rows[0].average_rating === null) {
       return res.status(404).json({ message: 'No ratings found for this recipe' });
     }
-    res.json({ average_rating: parseFloat(result[0].average_rating).toFixed(1) });
+    res.json({ average_rating: parseFloat(rows[0].average_rating).toFixed(1) });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -138,10 +141,11 @@ const getAverageRatingByRecipeId = async (req, res) => {
 const getCommentsByRecipeId = async (req, res) => {
   try {
     const id_recipe = parseInt(req.params.id_recipe);
-    const [comments] = await db.query(
-      'SELECT id_user, comment, rating, created_at FROM Notation WHERE id_recipe = ? AND comment IS NOT NULL',
+    const result = await db.query(
+      'SELECT id_user, comment, rating, created_at FROM notation WHERE id_recipe = $1 AND comment IS NOT NULL',
       [id_recipe]
     );
+    const comments = result.rows;
 
     if (comments.length === 0) {
       return res.status(404).json({ message: 'No comments found for this recipe' });

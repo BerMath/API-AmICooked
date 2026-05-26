@@ -1,12 +1,12 @@
-const {promisePool: db} = require('../config/database');
+const {pool: db} = require('../config/database');
 const bcrypt = require("bcrypt");
 const {getUserRole} = require("../services/role.service");
 
 // Get all users
 const getUsers = async (req, res) => {
     try {
-        const [users] = await db.query('SELECT * FROM Users');
-        res.json(users);
+        const result = await db.query('SELECT * FROM users');
+        res.json(result.rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({message: 'Server error', error: error.message});
@@ -17,7 +17,8 @@ const getUsers = async (req, res) => {
 const getUserById = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const [users] = await db.query('SELECT * FROM Users WHERE id = ?', [id]);
+        const result = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+        const users = result.rows;
 
         if (users.length === 0) {
             return res.status(404).json({message: 'User not found'});
@@ -43,11 +44,10 @@ const createUser = async (req, res) => {
             + date.toTimeString().split(' ')[0];
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const query = 'INSERT INTO Users (id, username, email, created_at, updated_at, password) VALUES (?, ?, ?, ?, ?, ?)';
-        const [result] = await db.query(query, [id, username, email, actualTimeStamp, actualTimeStamp, hashedPassword]);
+        const query = 'INSERT INTO users (username, email, created_at, updated_at, password) VALUES ($1, $2, $3, $4, $5) RETURNING id';
+        const result = await db.query(query, [username, email, actualTimeStamp, actualTimeStamp, hashedPassword]);
 
         const newUser = {
-            id: result.insertId,
             username: username,
             email: email,
             created_at: actualTimeStamp,
@@ -55,12 +55,14 @@ const createUser = async (req, res) => {
             password: hashedPassword,
         };
 
+        const userId = result.rows[0].id;
+
         res.status(201).json(newUser); // 201 = Created
     } catch (error) {
         console.error(error);
 
         // Handle duplicated email error
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === '23505') {
             return res.status(409).json({message: 'This email or username already exists'});
         }
 
@@ -79,7 +81,8 @@ const updateUser = async (req, res) => {
         password = password ?? null;
 
         if (password !== undefined && password !== null) {
-            const [users] = await db.query('SELECT password FROM Users WHERE id = ?', [id]);
+            const result = await db.query('SELECT password FROM users WHERE id = $1', [id]);
+            const users = result.rows;
             if (users.length === 0) {
                 return res.status(404).json({message: 'User not found'});
             }
@@ -96,21 +99,21 @@ const updateUser = async (req, res) => {
         const actualTimeStamp = date.toISOString().split('T')[0] + ' '
             + date.toTimeString().split(' ')[0];
 
-        const query = 'UPDATE Users SET username = IFNULL(?, username), email = IFNULL(?, email), password = IFNULL(?, password), updated_at = ? WHERE id = ?';
-        const [result] = await db.query(query, [username, email, password, actualTimeStamp, id]);
+        const query = 'UPDATE users SET username = COALESCE($1, username), email = COALESCE($2, email), password = COALESCE($3, password), updated_at = $4 WHERE id = $5';
+        const updateResult = await db.query(query, [username, email, password, actualTimeStamp, id]);
 
-        if (result.affectedRows === 0) {
+        if (updateResult.rowCount === 0) {
             return res.status(404).json({message: 'User not found'});
         }
 
         // Get the updated user
-        const [updatedUsers] = await db.query('SELECT * FROM Users WHERE id = ?', [id]);
-        res.json(updatedUsers[0]);
+        const result2 = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+        res.json(result2.rows[0]);
     } catch (error) {
         console.error(error);
 
         // Handle duplicated email error
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === '23505') {
             return res.status(409).json({message: 'This email or username already exists'}); // 409 = Conflict
         }
 
@@ -128,14 +131,15 @@ const updateUserXp = async (req, res) => {
             return res.status(400).json({message: 'XP is required'});
         }
 
-        const [existingXpAndLevelAmount] = await db.query('SELECT XP, LVL FROM Users WHERE id = ?', [id]);
+        const result = await db.query('SELECT XP, LVL FROM users WHERE id = $1', [id]);
+        const existingXpAndLevelAmount = result.rows;
 
         if (existingXpAndLevelAmount.length === 0) {
             return res.status(404).json({message: 'User not found'});
         }
 
-        const currentXP = existingXpAndLevelAmount[0].XP;
-        const currentLVL = existingXpAndLevelAmount[0].LVL;
+        const currentXP = existingXpAndLevelAmount[0].xp;
+        const currentLVL = existingXpAndLevelAmount[0].lvl;
 
         if (currentXP + xp > 100) {
             lvl = currentLVL + 1;
@@ -144,8 +148,8 @@ const updateUserXp = async (req, res) => {
             xp = currentXP + xp;
         }
 
-        const query = 'UPDATE Users SET XP = IFNULL(?, XP), LVL = IFNULL(?, LVL) WHERE id = ?';
-        const [result] = await db.query(query, [xp, lvl, id]);
+        const query = 'UPDATE users SET XP = COALESCE($1, XP), LVL = COALESCE($2, LVL) WHERE id = $3';
+        await db.query(query, [xp, lvl, id]);
 
         res.status(200).json({message: `User updated successfully, actual lvl ${lvl !== null ? lvl : currentLVL}, actual xp ${xp}`});
     } catch (error) {
@@ -158,9 +162,9 @@ const updateUserXp = async (req, res) => {
 const deleteUser = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const [result] = await db.query('DELETE FROM Users WHERE id = ? ', [id]);
+        const result = await db.query('DELETE FROM users WHERE id = $1', [id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({message: 'User not found'});
         }
 
@@ -180,9 +184,9 @@ const promoteUser = async (req, res) => {
             return res.status(400).json({message: 'User is already an admin'});
         }
 
-        [result] = await db.query('UPDATE Users SET role = ? WHERE id = ?', [userRole+1,id]);
+        const result = await db.query('UPDATE users SET role = $1 WHERE id = $2', [userRole+1,id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({message: 'User not found'});
         }
 
@@ -207,9 +211,9 @@ const demoteUser = async (req, res) => {
             return res.status(400).json({message: 'You cannot demote a user with the role of user'});
         }
 
-        [result] = await db.query('UPDATE Users SET role = ? WHERE id = ?', [userRole-1,id]);
+        const result = await db.query('UPDATE users SET role = $1 WHERE id = $2', [userRole-1,id]);
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({message: 'User not found'});
         }
 
