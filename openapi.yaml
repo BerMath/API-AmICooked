@@ -1,0 +1,482 @@
+openapi: 3.0.0
+info:
+  title: API AmICooked
+  version: 1.0.0
+  description: API de gestion de recettes avec authentification JWT
+servers:
+  - url: http://localhost:3001
+    description: Serveur local
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  # AUTHENTIFICATION
+  /users:
+    post:
+      summary: S'inscrire
+      tags:
+        - Authentification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Utilisateur créé
+        '409':
+          description: Email/username existant
+
+  /users/login:
+    post:
+      summary: Se connecter
+      tags:
+        - Authentification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Connexion réussie - retourne accessToken et refreshToken
+        '401':
+          description: Identifiants incorrects
+
+  /users/refresh:
+    post:
+      summary: Renouveler access token
+      tags:
+        - Authentification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Nouveau token généré
+        '401':
+          description: Refresh token invalide
+
+  /users/logout:
+    post:
+      summary: Se déconnecter
+      tags:
+        - Authentification
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Déconnecté
+
+  # RECETTES - CRUD
+  /recipes:
+    get:
+      summary: Récupérer recettes avec filtrage optionnel
+      tags:
+        - Recettes
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: ingredient
+          in: query
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+            enum: [easy, medium, hard]
+        - name: country
+          in: query
+          schema:
+            type: string
+        - name: diet
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des recettes
+
+    post:
+      summary: Créer une recette
+      tags:
+        - Recettes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                cooking_time:
+                  type: integer
+                preparation_time:
+                  type: integer
+                difficulty:
+                  type: string
+                  enum: [easy, medium, hard]
+      responses:
+        '201':
+          description: Recette créée
+        '400':
+          description: Données invalides
+
+  /recipes/{id}:
+    get:
+      summary: Récupérer une recette par ID
+      tags:
+        - Recettes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Recette trouvée
+        '404':
+          description: Recette non trouvée
+
+    put:
+      summary: Modifier une recette
+      tags:
+        - Recettes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                cooking_time:
+                  type: integer
+                preparation_time:
+                  type: integer
+      responses:
+        '200':
+          description: Recette modifiée
+        '403':
+          description: Permissions insuffisantes
+
+    delete:
+      summary: Supprimer une recette
+      tags:
+        - Recettes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Recette supprimée
+        '403':
+          description: Permissions insuffisantes
+
+  # INGRÉDIENTS
+  /ingredient:
+    get:
+      summary: Récupérer tous les ingrédients
+      tags:
+        - Ingrédients
+      responses:
+        '200':
+          description: Liste des ingrédients
+
+    post:
+      summary: Créer un ingrédient
+      tags:
+        - Ingrédients
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                category:
+                  type: string
+      responses:
+        '201':
+          description: Ingrédient créé
+
+  /ingredient/{id}:
+    get:
+      summary: Récupérer un ingrédient
+      tags:
+        - Ingrédients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ingrédient trouvé
+
+  # RECETTE-INGRÉDIENT
+  /recipe_ingredient:
+    post:
+      summary: Ajouter ingrédient à une recette
+      tags:
+        - Recette-Ingrédient
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_recipe:
+                  type: integer
+                id_ingredient:
+                  type: integer
+                quantity:
+                  type: number
+                unit:
+                  type: string
+      responses:
+        '201':
+          description: Ingrédient ajouté
+
+  /recipe_ingredient/recipe/{id_recipe}:
+    get:
+      summary: Récupérer ingrédients d'une recette
+      tags:
+        - Recette-Ingrédient
+      parameters:
+        - name: id_recipe
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ingrédients trouvés
+
+  # FAVORIS
+  /favory:
+    post:
+      summary: Ajouter aux favoris
+      tags:
+        - Favoris
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_user:
+                  type: integer
+                id_recipe:
+                  type: integer
+      responses:
+        '201':
+          description: Ajouté aux favoris
+
+  /favory/user/{id_user}:
+    get:
+      summary: Récupérer favoris d'un utilisateur
+      tags:
+        - Favoris
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id_user
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Favoris trouvés
+
+  /favory/{id_user}/{id_recipe}:
+    delete:
+      summary: Retirer des favoris
+      tags:
+        - Favoris
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id_user
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id_recipe
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Retiré des favoris
+
+  # NOTATION & COMMENTAIRES
+  /notation:
+    post:
+      summary: Ajouter une notation/commentaire
+      tags:
+        - Notation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_user:
+                  type: integer
+                id_recipe:
+                  type: integer
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                comment:
+                  type: string
+      responses:
+        '201':
+          description: Notation ajoutée
+        '400':
+          description: Rating doit être entre 1 et 5
+
+  /notation/recipe/{id_recipe}:
+    get:
+      summary: Récupérer notations d'une recette
+      tags:
+        - Notation
+      parameters:
+        - name: id_recipe
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notations trouvées
+
+  /notation/recipe/{id_recipe}/average:
+    get:
+      summary: Moyenne des notes d'une recette
+      tags:
+        - Notation
+      parameters:
+        - name: id_recipe
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Moyenne des notes
+
+  /notation/{id_user}/{id_recipe}:
+    delete:
+      summary: Supprimer sa notation
+      tags:
+        - Notation
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id_user
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id_recipe
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Notation supprimée
+
+  # FILTRES & RECHERCHE
+  /filters:
+    get:
+      summary: Récupérer tous les filtres
+      tags:
+        - Filtres
+      responses:
+        '200':
+          description: Liste des filtres
+
+  /recipes/{id}/filters:
+    get:
+      summary: Récupérer filtres d'une recette
+      tags:
+        - Filtres
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Filtres trouvés
